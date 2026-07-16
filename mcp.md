@@ -14,16 +14,19 @@ The hosted server needs no keys and no install. Add the URL and sign in with you
 claude mcp add --transport http flusterduck https://mcp.flusterduck.com/mcp
 ```
 
-Prefer running the server locally (stdio)? `npx` fetches it on first run. Grab an MCP key and your site ID from the dashboard (Settings → API keys), then:
+Prefer running the server locally (stdio)? `npx` fetches it on first run. Create an MCP key in the dashboard (Settings > API Keys). The key is scoped to your current site when you create it, so the key alone is enough:
 
 ```bash
 claude mcp add flusterduck \
   --env FLUSTERDUCK_MCP_KEY=fd_mcp_xxxxxxxxxxxx \
-  --env FLUSTERDUCK_SITE_ID=your-site-id \
   -- npx -y @flusterduck/mcp-server
 ```
 
+Only org-scoped keys also need `--env FLUSTERDUCK_SITE_ID=<site-uuid>` to pick which site to read.
+
 ## Setup
+
+All local (stdio) configs below need exactly one value: an MCP key from Settings > API Keys. Keys are scoped to your current site when you create them, so the server finds the right site by itself. Add `"FLUSTERDUCK_SITE_ID": "<site-uuid>"` to the env block only when using an org-scoped key.
 
 ### Claude Desktop
 
@@ -36,8 +39,7 @@ Add to `~/Library/Application Support/Claude/claude_desktop_config.json` (npx pu
       "command": "npx",
       "args": ["-y", "@flusterduck/mcp-server"],
       "env": {
-        "FLUSTERDUCK_MCP_KEY": "fd_mcp_xxxxxxxxxxxx",
-        "FLUSTERDUCK_SITE_ID": "7f2c9d4a-4b5e-4c3a-9b1d-2e6a4f8c7d5b"
+        "FLUSTERDUCK_MCP_KEY": "fd_mcp_xxxxxxxxxxxx"
       }
     }
   }
@@ -51,7 +53,6 @@ Restart Claude Desktop. Tools are available immediately.
 ```bash
 claude mcp add flusterduck \
   --env FLUSTERDUCK_MCP_KEY=fd_mcp_xxxxxxxxxxxx \
-  --env FLUSTERDUCK_SITE_ID=your-site-id \
   -- npx -y @flusterduck/mcp-server
 ```
 
@@ -64,8 +65,7 @@ Or add directly to `~/.claude/settings.json`:
       "command": "npx",
       "args": ["-y", "@flusterduck/mcp-server"],
       "env": {
-        "FLUSTERDUCK_MCP_KEY": "fd_mcp_xxxxxxxxxxxx",
-        "FLUSTERDUCK_SITE_ID": "7f2c9d4a-4b5e-4c3a-9b1d-2e6a4f8c7d5b"
+        "FLUSTERDUCK_MCP_KEY": "fd_mcp_xxxxxxxxxxxx"
       }
     }
   }
@@ -83,8 +83,7 @@ Or add directly to `~/.claude/settings.json`:
       "command": "npx",
       "args": ["-y", "@flusterduck/mcp-server"],
       "env": {
-        "FLUSTERDUCK_MCP_KEY": "fd_mcp_xxxxxxxxxxxx",
-        "FLUSTERDUCK_SITE_ID": "7f2c9d4a-4b5e-4c3a-9b1d-2e6a4f8c7d5b"
+        "FLUSTERDUCK_MCP_KEY": "fd_mcp_xxxxxxxxxxxx"
       }
     }
   }
@@ -104,8 +103,7 @@ Reload the Cursor window after saving.
       "command": "npx",
       "args": ["-y", "@flusterduck/mcp-server"],
       "env": {
-        "FLUSTERDUCK_MCP_KEY": "fd_mcp_xxxxxxxxxxxx",
-        "FLUSTERDUCK_SITE_ID": "7f2c9d4a-4b5e-4c3a-9b1d-2e6a4f8c7d5b"
+        "FLUSTERDUCK_MCP_KEY": "fd_mcp_xxxxxxxxxxxx"
       }
     }
   }
@@ -124,8 +122,7 @@ Reload the Cursor window after saving.
       "command": "npx",
       "args": ["-y", "@flusterduck/mcp-server"],
       "env": {
-        "FLUSTERDUCK_MCP_KEY": "fd_mcp_xxxxxxxxxxxx",
-        "FLUSTERDUCK_SITE_ID": "7f2c9d4a-4b5e-4c3a-9b1d-2e6a4f8c7d5b"
+        "FLUSTERDUCK_MCP_KEY": "fd_mcp_xxxxxxxxxxxx"
       }
     }
   }
@@ -174,10 +171,10 @@ page_path: "/settings/billing"
 
 ### investigate_session
 
-Full investigation of a single session: event timeline in order, dominant signal types, matching open issues, and a verdict on whether the session represents a recurring pattern or an outlier.
+Full investigation of a single session: event timeline in order, dominant signal types, matching open issues, and a verdict on whether the session represents a recurring pattern or an outlier. Session ids are 32-character hex strings; get them from `explore`, `get_issue` evidence, or `query_raw_rows` on the `sessions` table.
 
 ```
-session_id: "ses_xxxxxxxxxxxx"
+session_id: "f3a9c1d24e8b76051a2b3c4d5e6f7081"
 ```
 
 ### weekly_summary
@@ -219,9 +216,9 @@ All require `mcp:read` scope. Start with `get_site_context`. It gives you the fu
 
 **Issues and alerts**
 
-- `get_issues`: All UX issues. Filter by status: `open`, `triaged`, `in_progress`, `verified`, `resolved`, `regressed`.
+- `get_issues`: All UX issues, newest activity first, 50 per page. Filter by status: `open`, `triaged`, `in_progress`, `verified`, `resolved`, `ignored`, `regressed`.
 - `get_issue`: Full detail on one issue, including evidence, session links, verification history, and deploy correlation.
-- `get_alerts`: Active and resolved alerts. Filter by `open`, `acknowledged`, or `resolved`.
+- `get_alerts`: Alerts, newest first, 50 per page. Filter by status: `fired` (nobody has looked yet), `acknowledged`, `investigating`, `resolved`.
 - `list_alert_rules`: All configured rules with thresholds, channels, and enabled state. Call this before creating or modifying rules.
 
 **Page deep-dives**
@@ -235,7 +232,7 @@ All require `mcp:read` scope. Start with `get_site_context`. It gives you the fu
 **Sessions and raw data**
 
 - `get_session_detail`: Full event timeline for one session in chronological order.
-- `get_heuristics`: The complete signal catalog with all 33 types, scoring weights, and thresholds.
+- `get_heuristics`: The complete signal catalog: every friction heuristic type with its scoring weight and thresholds.
 - `query_raw_rows`: SQL-style access to allowlisted tables (`events`, `signals`, `sessions`, `page_scores`, `score_history`, `ux_issues`, `alerts`, `deploys`).
 - `download_events_csv`: Raw event export as CSV.
 - `explore`: A deterministic, typed query engine over session data. No natural language, no LLM, built explicitly for agents to answer ad-hoc questions the rest of the surface doesn't cover directly. Pick a `window_days` (1-90, default 7), up to 12 AND-ed `filters` over `signal`, `page`, `source`, `confused`, `converted`, `event_type` (ops `is` / `is_not` / `contains`, contains only on `page` and `source`), and exactly one `output`: `{mode: "list"}` to pull matching sessions, or `{mode: "measure", metric, group_by?}` to compute `count`, `avg_pageviews`, `conversion_rate`, `avg_dwell_ms`, or `bounce_rate` as a scalar or, with `group_by` (`page`, `source`, `day`, `signal`, `cohort`), a series. See "Explore via MCP" below for a list and a measure example.
@@ -286,10 +283,10 @@ Returns conversion rate as a two-point series: the `confused` cohort (sessions w
 
 All require `manage:write` scope.
 
-**`update_issue`**: Change status, add a triage note, or assign an issue.
+**`update_issue`**: Change status, add a triage note, or assign an issue. Issue ids are UUIDs; get them from `get_issues`.
 
 ```
-issue_id: "iss_3a7f2c9d4e1b"
+issue_id: "3a7f2c9d-4e1b-42d8-9c5a-1f6b8e2d4a7c"
 status: "triaged"
 note: "Confirmed on Safari iOS 17. Disabled-state styling on #place-order doesn't communicate that payment is processing."
 assigned_to: "eng-lead"
@@ -300,7 +297,7 @@ Status options: `open`, `triaged`, `in_progress`, `verified`, `resolved`, `ignor
 **`rate_issue`**: Rate a detected issue's accuracy. `confirmed` means it described a real problem, `rejected` means it was a false positive or noise. Ratings feed the detection accuracy metric without changing the issue's status. Pass `null` to clear a previous rating.
 
 ```
-issue_id: "iss_3a7f2c9d4e1b"
+issue_id: "3a7f2c9d-4e1b-42d8-9c5a-1f6b8e2d4a7c"
 verdict: "confirmed"
 ```
 
@@ -314,7 +311,7 @@ message: "get_issue cites session ids but there is no way to fetch two sessions 
 **`update_alert`**: Acknowledge, mark investigating, or resolve an alert.
 
 ```
-alert_id: "alt_9b5e1f4c2d8a"
+alert_id: "9b5e1f4c-2d8a-4f3e-8b6d-7c1a5e9f2b4d"
 status: "resolved"
 resolved_reason: "Deploy 2026-06-09 added a spinner and disabled state to the payment submit button."
 ```
@@ -325,7 +322,7 @@ resolved_reason: "Deploy 2026-06-09 added a spinner and disabled state to the pa
 message: "Redesigned billing flow launched. Monitoring confusion score on /settings/billing."
 ```
 
-**`create_alert_rule`**: Create a new alert rule.
+**`create_alert_rule`**: Create a new alert rule. Trigger types: `spike`, `anomaly`, `new_page`, `trend`, `co_occurrence`, `positive` (fires when the score drops below the threshold), `budget`, `revenue_threshold` (threshold in cents), `stalled_signups`. Omit `threshold` and `cooldown_minutes` to get sensible per-trigger defaults.
 
 ```
 name: "Checkout rage click spike"
