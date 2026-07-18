@@ -30,7 +30,7 @@ Friction types are why the dashboard can say something useful instead of showing
 
 ## Why are there more detectors than friction types?
 
-Because several watchers can file reports under one category. Different detectors catch mobile taps that miss their target, thumb-zone misses, and near-miss clicks from different angles, and their reports can land in the same friction type. The detector count grows every time we learn a new way users get stuck (it's an iterative process: every real-world bug we see becomes a detector); the friction-type list grows more slowly, only when a genuinely new *category* of struggle shows up.
+Because several watchers can file reports under one category. Different detectors catch mobile taps that miss their target, thumb-zone misses, and near-miss clicks from different angles, and their reports can land in the same friction type. The detector count grows every time we learn a new way users get stuck (it's an iterative process: every real-world bug we see becomes a detector); the friction-type list grows more slowly, only when a whole new *category* of struggle shows up.
 
 ## From signals to issues
 

@@ -66,3 +66,5 @@ See [MCP setup](./mcp) for a 5-minute configuration walkthrough.
 Add your teammates under Settings > Members. Engineers can triage issues. PMs can read scores and run weekly summaries. Admins can manage alert rules and integrations.
 
 If your team uses the AI assistant heavily, create a read-only `fd_mcp_` key so teammates can query friction data without access to your write operations.
+
+That's the whole setup. Everything past this point is the duck's problem.

@@ -312,6 +312,8 @@ Or via script tag (CDN):
 </script>
 ```
 
+The SDK has no opinion about your framework. It only has opinions about your buttons.
+
 ---
 
 ## Environment variables by framework

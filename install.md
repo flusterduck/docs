@@ -20,7 +20,7 @@ Want zero third-party runtime dependency, or run under a strict CSP that forbids
 
 ### Verifying locally
 
-Flusterduck treats non-user traffic as noise: events sent from `localhost` (or other dev hosts) and events from automated browsers are acknowledged but never stored, so a developer smoke-test can't burn your session quota, skew scores, or create phantom issues. To see events actually land while developing, add `data-env="development"` to the tag (or pass `environment: 'development'` to `init`), which stands those filters down and tags the traffic as development. Accepted names: `development`, `dev`, `test`, `testing`, `staging`, `local`. Remove the attribute before shipping. The [test-suite CLI](/testing) walks the whole verification for you.
+Flusterduck treats non-user traffic as noise: events sent from `localhost` (or other dev hosts) and events from automated browsers are acknowledged but never stored, so a developer smoke-test (thanks Claude) can't burn your session quota, skew scores, or create phantom issues. To see events actually land while developing, add `data-env="development"` to the tag (or pass `environment: 'development'` to `init`), which stands those filters down and tags the traffic as development. Accepted names: `development`, `dev`, `test`, `testing`, `staging`, `local`. Remove the attribute before shipping. The [test-suite CLI](/testing) walks the whole verification for you.
 
 ## Packages
 
@@ -36,20 +36,39 @@ Required for every project. The framework wrappers depend on it.
 
 ### Framework wrappers
 
+Pick the one that matches your stack. Each command installs the core SDK alongside the wrapper.
+
+#### Next.js
+
+Works with both the App Router and the Pages Router.
+
 ```bash
-# Next.js (App Router or Pages Router)
 pnpm add flusterduck @flusterduck/next
+```
 
-# React (Vite, CRA, or any React app)
+#### React
+
+For Vite, CRA, or any other React app.
+
+```bash
 pnpm add flusterduck @flusterduck/react
+```
 
-# Vue 3
+#### Vue 3
+
+```bash
 pnpm add flusterduck @flusterduck/vue
+```
 
-# SvelteKit
+#### SvelteKit
+
+```bash
 pnpm add flusterduck @flusterduck/svelte
+```
 
-# Nuxt 3
+#### Nuxt 3
+
+```bash
 pnpm add flusterduck @flusterduck/nuxt
 ```
 

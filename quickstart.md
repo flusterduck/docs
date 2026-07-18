@@ -78,7 +78,7 @@ NUXT_PUBLIC_FLUSTERDUCK_KEY=fd_pub_xxxxxxxxxxxx
 
 Within a few sessions of real traffic, you'll have confusion scores on your tracked pages. The first issues typically surface within 24-48 hours, once the scoring engine has enough signal clusters.
 
-The signals you'll see most in early data: `rage_click`, `dead_click`, and `form_abandonment`. They're the clearest indicators of friction and tend to accumulate quickly on any app with real users.
+The signals you'll see most in early data: `rage_click`, `dead_click`, and `form_abandonment`. They're the clearest indicators of friction and tend to accumulate quickly on any app with real users. No app has ever had zero.
 
 ## Where to go from here
 

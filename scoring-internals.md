@@ -1,6 +1,6 @@
 # Scoring engine internals
 
-The [confusion scores](/docs/scoring) page covers what scores mean and how to read them. This page covers how they're computed: the exact formula, every signal weight, the confidence system, baseline math, and normalization.
+The [confusion scores](/scoring) page covers what scores mean and how to read them. This page covers how they're computed: the exact formula, every signal weight, the confidence system, baseline math, and normalization.
 
 You're here because a score moved and you want to know why. Good.
 

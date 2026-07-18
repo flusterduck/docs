@@ -161,3 +161,5 @@ Same thing, no npx: POST to [`/v1/deploys`](./deploy-correlation) directly.
 **"Flusterduck is already configured"**: the SDK was already detected in the target file. Nothing changed.
 
 **"Failed to install dependencies"**: package installation failed. The CLI prints the exact install command to run yourself.
+
+If none of these come up, the install worked. That outcome is more common than a troubleshooting section makes it sound.

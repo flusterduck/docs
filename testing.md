@@ -1,6 +1,6 @@
 # Testing Your Integration
 
-`@flusterduck/test-suite` is a Playwright-based CLI that simulates user frustration patterns against a running app. It verifies your Flusterduck setup before you go to production: signals are being detected, the scoring engine is receiving them, and issues will be created from real friction.
+`@flusterduck/test-suite` is a Playwright-based CLI that simulates user frustration patterns against a running app. It verifies your Flusterduck setup before you go to production: signals are being detected, the scoring engine is receiving them, and issues will be created from real friction. The simulated user has exactly one job: getting frustrated. It is very good at it.
 
 ## Install
 
