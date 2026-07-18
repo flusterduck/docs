@@ -24,7 +24,7 @@ That's a single signal: which pattern fired, on which element (its visible label
 
 ## Friction types: the filing system
 
-A friction type is the named category a signal belongs to: the label Flusterduck's scoring, dashboard, and AI use to group, weight, and rank what the detectors saw. `rage_click`, `dead_click`, `form_abandonment`, `no_op_interaction`: there are 128 of them, each with a weight reflecting how strongly it predicts a lost conversion (a dead-end checkout submit weighs far more than a stray scroll bounce).
+A friction type is the named category a signal belongs to: the label Flusterduck's scoring, dashboard, and AI use to group, weight, and rank what the detectors saw. `rage_click`, `dead_click`, `form_abandonment`, `no_op_interaction`: there are 129 of them, each with a weight reflecting how strongly it predicts a lost conversion (a dead-end checkout submit weighs far more than a stray scroll bounce).
 
 Friction types are why the dashboard can say something useful instead of showing you a firehose: every sighting is filed, weighted, and comparable.
 

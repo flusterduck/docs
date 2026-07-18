@@ -44,6 +44,7 @@ Every signal has a fixed weight that reflects how strong an indicator of frictio
 | `layout_shift_rage` | 28 | Click lands where a target was before a layout shift moved it |
 | `rage_click` | 25 | 3+ clustered clicks within two seconds |
 | `error_recovery_loop` | 24 | 3+ submit attempts with repeated errors on the same form |
+| `oauth_dead_end` | 24 | Provider sign-in click leaves the page and the user returns to an auth screen with an account-mismatch error |
 | `silent_failure_retry` | 22 | Repeated clicks on a primary action while loading stays unresolved |
 | `overlay_dismiss_struggle` | 22 | Repeated Escape presses and close clicks while a modal stays open |
 | `form_abandonment` | 20 | User enters form data, exits without submitting |

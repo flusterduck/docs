@@ -12,7 +12,7 @@ There's a gap between "conversion dropped 8% on checkout" and "the continue butt
 
 ## How it works
 
-The SDK runs in the browser. It listens for behavioral signals, 128 types in all (rage clicks, dead clicks, form abandonment, scroll patterns, keyboard confusion, mobile tap misses, navigation loops, and more), and sends them to the scoring engine. It never records keystrokes, form values, or page text.
+The SDK runs in the browser. It listens for behavioral signals, 129 types in all (rage clicks, dead clicks, form abandonment, scroll patterns, keyboard confusion, mobile tap misses, navigation loops, and more), and sends them to the scoring engine. It never records keystrokes, form values, or page text.
 
 The scoring engine does four things with those signals:
 
