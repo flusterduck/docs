@@ -2,7 +2,7 @@
 
 Signals are the raw evidence of user confusion. Every time a user does something that indicates friction, the SDK emits a signal. The scoring engine weighs signals by type, frequency, and recency to compute page confusion scores and cluster repeated patterns into issues.
 
-There are 129 built-in signal types across eight tiers, all detecting on a default install. Any signal can be switched off per site from the served SDK config.
+There are 131 built-in signal types across eight tiers, all detecting on a default install. Any signal can be switched off per site from the served SDK config.
 
 ## Tier 1: Direct friction
 
@@ -31,6 +31,8 @@ If you see tier 1 signals on a critical element (a checkout button, a signup for
 | `payment_widget_failure` | A payment provider iframe (Stripe, PayPal, Braintree, Adyen, Square) never loaded or rendered at zero size on a visible page: checkout shows a blank payment area. Only the provider host is reported, never the frame URL. |
 | `auth_roundtrip_limbo` | The user sits on a check-your-email screen, leaves for their inbox and returns 2+ times over 90+ seconds, and the verification never completes. |
 | `oauth_dead_end` | The user clicks a provider sign-in (Google, GitHub, Apple, Microsoft, Facebook, X, SSO), leaves for the provider, and returns within minutes to an auth screen showing an account-mismatch error. The classic wrong-door bounce: they meant to sign up, landed on login, and no account got created or linked. Error copy is matched in the browser, never transmitted. |
+| `empty_page_hold` | Ten-plus seconds of foreground time after load, the visitor still sees effectively nothing, sustained across two checks (10s and 14s) so a slow-but-arriving page stays silent. Two variants in the evidence: `starved` (a spinner or skeleton with no content ever arriving) and `reveal_dead` (substantial content rendered but stuck visually hidden, the blank page a broken reveal animation leaves behind). Hidden tabs never accumulate time, minimal pages with a real form never fire, and only counts and durations leave the browser. |
+| `reload_retry` | The page is reloaded as a frustration response. `starved_reload`: the prior load of the same URL never showed the visitor content and they reloaded to try again. `rage_reload`: second-or-later reload of the same URL within 90 seconds even when content had arrived. A single reload of a working page never fires; page identity is compared as origin plus pathname in the browser and never transmitted. |
 | `deep_link_dead_end` | An external or campaign arrival landed on a page whose title or top heading reads as not-found. Only the referrer host is reported, never the full referrer. |
 | `ghost_toggle` | User clicked a toggle, checkbox, or switch and the state either never changed (swallowed click) or changed then silently reverted within 2 seconds. Requires 2+ ghost events on the same control within 30 seconds. |
 | `premature_commit_reversal` | User clicked a primary CTA (submit, buy, confirm, add to cart) and reversed the action within 2 seconds via browser back, Ctrl+Z, Escape, or clicking a cancel element. The speed of the reversal indicates regret or accidental commitment. |
@@ -291,7 +293,7 @@ signal('form_abandonment', {
 })
 ```
 
-The first argument is the signal type: any of the 129 built-in types or a custom string. The second is optional metadata. Never include PII, form values, or anything a user typed.
+The first argument is the signal type: any of the 131 built-in types or a custom string. The second is optional metadata. Never include PII, form values, or anything a user typed.
 
 Custom signal types appear in the dashboard and scoring engine alongside built-in types. They don't get tier weights assigned automatically. The scoring engine treats them as tier 2 by default until enough data accumulates for it to assess their actual impact.
 

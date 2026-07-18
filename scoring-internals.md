@@ -42,12 +42,14 @@ Every signal has a fixed weight that reflects how strong an indicator of frictio
 | `active_funnel_rejection` | 38 | High-intent user hits friction at terminal step, leaves without converting |
 | `dead_end_submit` | 30 | Submit button clicked, no network request or DOM change follows |
 | `layout_shift_rage` | 28 | Click lands where a target was before a layout shift moved it |
+| `empty_page_hold` | 26 | Ten-plus foreground seconds after load the visitor still sees effectively nothing, sustained across two checks |
 | `rage_click` | 25 | 3+ clustered clicks within two seconds |
 | `error_recovery_loop` | 24 | 3+ submit attempts with repeated errors on the same form |
 | `oauth_dead_end` | 24 | Provider sign-in click leaves the page and the user returns to an auth screen with an account-mismatch error |
 | `silent_failure_retry` | 22 | Repeated clicks on a primary action while loading stays unresolved |
 | `overlay_dismiss_struggle` | 22 | Repeated Escape presses and close clicks while a modal stays open |
 | `form_abandonment` | 20 | User enters form data, exits without submitting |
+| `reload_retry` | 20 | The page is reloaded as a frustration response: the prior load showed nothing, or reload-spamming within 90 seconds |
 | `disabled_element_attempt` | 20 | User clicks a disabled control more than once |
 | `focus_trap` | 20 | Keyboard focus can't escape a container despite Tab and Escape |
 | `accidental_click_bounce` | 18 | Navigation reversed almost immediately after the click that caused it |

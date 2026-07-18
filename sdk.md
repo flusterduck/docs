@@ -30,7 +30,7 @@ Always use `async`, never `defer`. It's the only way a slow or unreachable CDN c
 
 ## What you get automatically
 
-Once `init()` runs, the SDK starts detecting all 129 behavioral signal types without any additional code. You don't call `signal()` for rage clicks, dead clicks, form abandonment, scroll confusion, or mobile tap misses. Those just work.
+Once `init()` runs, the SDK starts detecting all 131 behavioral signal types without any additional code. You don't call `signal()` for rage clicks, dead clicks, form abandonment, scroll confusion, or mobile tap misses. Those just work.
 
 Signal classification runs locally in the browser. The SDK sends classified signals and safe metadata to the ingest API; scoring, alerting, and issue correlation happen after ingest.
 
@@ -192,7 +192,7 @@ The package ships full type definitions. If you want compile-time safety on sign
 import { signal } from 'flusterduck'
 import type { SignalType } from 'flusterduck'
 
-const type: SignalType = 'rage_click'   // autocomplete across all 129 types
+const type: SignalType = 'rage_click'   // autocomplete across all 131 types
 signal(type, { selector: '#submit-btn' })
 ```
 
