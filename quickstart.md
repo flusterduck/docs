@@ -82,7 +82,7 @@ The signals you'll see most in early data: `rage_click`, `dead_click`, and `form
 
 ## Where to go from here
 
-- [Signals](./signals): what each of the 127 signal types means and when to act on it
+- [Signals](./signals): what each of the 128 signal types means and when to act on it
 - [SDK reference](./sdk): every `init()` option and method, with guidance on what actually matters
 - [Alerts](./alerts): get notified when a deploy breaks something before your users tell you
 - [MCP setup](./mcp): ask your AI assistant about friction data directly instead of checking a dashboard

@@ -66,6 +66,7 @@ Every signal has a fixed weight that reflects how strong an indicator of frictio
 | `tab_thrash` | 15 |
 | `copy_paste_rework` | 14 |
 | `repeat_form_input` | 14 |
+| `bulk_action_miss` | 14 |
 | `sticky_obstruction_click` | 14 |
 | `post_action_anxiety` | 13 |
 | `settings_hop` | 12 |

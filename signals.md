@@ -2,7 +2,7 @@
 
 Signals are the raw evidence of user confusion. Every time a user does something that indicates friction, the SDK emits a signal. The scoring engine weighs signals by type, frequency, and recency to compute page confusion scores and cluster repeated patterns into issues.
 
-There are 127 built-in signal types across eight tiers, all detecting on a default install. Any signal can be switched off per site from the served SDK config.
+There are 128 built-in signal types across eight tiers, all detecting on a default install. Any signal can be switched off per site from the served SDK config.
 
 ## Tier 1: Direct friction
 
@@ -55,6 +55,7 @@ If a tier 2 signal appears 20+ times on the same page, or you're seeing 5+ diffe
 | `settings_hop` | User visited settings or preferences multiple times in a session without finding what they needed. |
 | `copy_paste_rework` | User selected text and then immediately re-typed it. Often indicates a pre-fill or autocomplete that didn't work. |
 | `repeat_form_input` | User cleared and re-entered the same field more than once. Usually a validation message that's unclear or delayed. |
+| `bulk_action_miss` | User committed the same value into 4 or more structurally identical sibling fields, one row at a time, within 3 minutes. A copy-to-all control went unnoticed, or doesn't exist. The value itself never leaves the browser: only counts and field identity are reported. |
 | `decision_paralysis` | User's cursor oscillated between two or more interactive elements (pricing tiers, plan selectors, CTAs) with 800ms+ dwell on each, repeating the back-and-forth at least twice within 12 seconds. They can't decide. |
 | `friction_cascade` | A tier 1 signal fired and was followed by 2+ distinct tier 2 or tier 3 signal types within 90 seconds on the same page. The tier 1 signal is the root cause; the followers are symptoms. |
 | `keyboard_trap` | Focus can't escape a container. The user pressed Tab 6+ consecutive times and focus stayed within the same parent region without the user clicking elsewhere. |
@@ -289,7 +290,7 @@ signal('form_abandonment', {
 })
 ```
 
-The first argument is the signal type: any of the 127 built-in types or a custom string. The second is optional metadata. Never include PII, form values, or anything a user typed.
+The first argument is the signal type: any of the 128 built-in types or a custom string. The second is optional metadata. Never include PII, form values, or anything a user typed.
 
 Custom signal types appear in the dashboard and scoring engine alongside built-in types. They don't get tier weights assigned automatically. The scoring engine treats them as tier 2 by default until enough data accumulates for it to assess their actual impact.
 
