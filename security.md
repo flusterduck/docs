@@ -1,6 +1,6 @@
 # Security
 
-Flusterduck collects behavioral signals, not private content. This page covers the security model: what leaves the browser, how authentication and authorization work, how keys are protected, where rate limits sit, and what the database enforces. If you're running a security review, this is your reference, and if you have a question it doesn't answer, ask us at support@flusterduck.com.
+Flusterduck collects behavioral signals, not private content. This page covers the security model: what leaves the browser, how authentication and authorization work, how keys are protected, where rate limits sit, and what the database enforces. If you're running a security review, this is your reference, and if you have a question it doesn't answer, ask us at support@flusterduck.app.
 
 ## What leaves the browser, and what never does
 
@@ -118,4 +118,4 @@ Payloads are scrubbed at ingest as a backstop: keys that look like credentials o
 
 ## Reporting a vulnerability
 
-We publish a `security.txt` at [flusterduck.com/.well-known/security.txt](https://flusterduck.com/.well-known/security.txt). If you find something, tell us at support@flusterduck.com. We read every report and fix what's real, regardless of severity.
+We publish a `security.txt` at [flusterduck.com/.well-known/security.txt](https://flusterduck.com/.well-known/security.txt). If you find something, tell us at support@flusterduck.app. We read every report and fix what's real, regardless of severity.
