@@ -36,7 +36,7 @@ The SDK batches behavioral events and POSTs them to the `ingest` edge function. 
 }
 ```
 
-The SDK runs client-side only. It attaches listeners for clicks, scroll, keyboard, touch, form focus/blur, navigation, and errors. It doesn't attach listeners that would capture keystrokes, form values, or page text. That constraint is enforced at the code level.
+The SDK runs client-side only. It attaches listeners for clicks, scroll, keyboard, touch, form focus/blur, navigation, and errors. It does not capture keystrokes or form values. It may attach a short, PII-redacted accessible label to the element involved in an event; it does not serialize the page or send arbitrary page copy.
 
 ## ingest
 

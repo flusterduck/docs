@@ -243,7 +243,7 @@ Explanations are cached server-side per fingerprint, sanitized (no HTML, no URLs
 
 ## Bring your own API (BYOK)
 
-By default, Guide calls the Flusterduck edge function for AI explanations, which uses your plan's included allocation. If you want to use your own Anthropic key, your own model, or a completely custom backend, point Guide at your endpoint:
+By default, Guide calls the Flusterduck edge function for AI explanations, which uses the included trial or plan allowance. If you want to use your own Anthropic key, your own model, or a completely custom backend, point Guide at your endpoint:
 
 ```ts
 guide: {
@@ -260,7 +260,7 @@ Your endpoint receives the exact request bodies documented above: explanation re
 }
 ```
 
-BYOK requests don't count against your Flusterduck Guide allocation. You're paying your own provider directly.
+BYOK requests don't use your Flusterduck Guide allowance. You're paying your own provider directly.
 
 ## Custom explanations
 
@@ -272,7 +272,7 @@ For critical elements where you know exactly what the explanation should say, sk
 </button>
 ```
 
-When a user hovers over an element with `data-fd-guide`, the SDK shows that text directly. No API call, no latency, no AI cost. The attribute content always wins over generated explanations.
+When a user hovers over an element with `data-fd-guide`, the SDK shows that text directly. No API call, no latency, and no Guide allowance used. The attribute content always wins over generated explanations.
 
 Use this for high-traffic elements where you want guaranteed wording, or for controls that handle money, deletion, or permissions where precision matters.
 

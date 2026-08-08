@@ -4,7 +4,7 @@ Autofix turns an issue's evidence into a concrete fix: a root cause, the specifi
 
 ## Two modes
 
-**Brief (always available).** Autofix reads the behavioral evidence already on the issue (the same no-PII data used for diagnosis) and proposes a change. You (or your agent) ship it. Flusterduck never sees your repository in this mode.
+**Brief (when an Autofix is available).** Autofix reads the bounded behavioral evidence already on the issue and proposes a change. It receives no form values or user-typed text. You (or your agent) ship the change, and Flusterduck never sees your repository in this mode.
 
 **Draft PR (GitHub App connected).** With the GitHub App installed, Autofix researches the connected repo, reads the files most likely at fault, plans the smallest safe change, and opens a **draft** pull request. It only edits files it read, never creates files, and never merges. If it isn't confident it can fix the issue safely from what it can see, it falls back to the brief rather than pushing a guess.
 
@@ -21,15 +21,17 @@ Open any issue and press **Generate fix** on the Autofix card. You get:
 - **Agent prompt**: a self-contained instruction to paste into your coding agent.
 - **Draft PR**: when the GitHub App is connected and the fix is confident, a link to the opened pull request and the files it changed.
 
-Regenerate any time to get a fresh proposal.
+Generate again while your plan has an Autofix remaining. Each successful generation counts as one fix.
 
-## Limits and cost
+## Limits and allowance
 
-Autofix is a **count of fixes**, included by plan: Scale (5/mo), Pro (20/mo), Enterprise (unlimited). Grow includes none. The count only decrements on a successful generation, and resets each billing cycle.
+The three-day trial includes **one manual Autofix**. It is one fix for the lifetime of the trial, not one per month. Only a person pressing **Generate fix** can use it; scheduled Autofix Autopilot requires paid billing.
 
-Need more than your monthly allowance? Autofix scales with your plan, not à la carte: **upgrade your plan** for more fixes. There are no add-on packs to buy.
+Paid Autofix is a **count of fixes** included by plan: Grow (2/month), Scale (10/month), Pro (30/month), Enterprise (unlimited). The count only decrements on a successful generation and resets each calendar month.
 
-Autofix runs on its own AI budget, separate from issue diagnosis and Guide, so heavy autofix use can never starve diagnosis (and vice versa). You never see a dollar meter, just the fix count.
+If the trial Autofix has been used, Billing shows **Start my plan now**. Starting the plan ends the trial and charges the saved card immediately, after you confirm the plan and price there. If a paid plan needs more fixes, upgrade the plan. There are no add-on packs to buy.
+
+Autofix has its own allowance, separate from issue diagnosis and Guide, so heavy Autofix use can never use up either of those allowances. Usage shows the fix count.
 
 ## Safety boundary
 

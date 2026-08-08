@@ -34,7 +34,7 @@ Because several watchers can file reports under one category. Different detector
 
 ## From signals to issues
 
-Signals don't reach your issue list one at a time. When the same friction type keeps firing on the same page or element across multiple sessions, Flusterduck clusters those signals into a single **issue**, with a plain-language title, a severity bounded by how many users it actually reached, a confidence grade, a revenue estimate, and (on paid plans) an AI diagnosis grounded in your page's actual content. That ranked issue list is the product; detectors, signals, and friction types are the machinery underneath it.
+Signals don't reach your issue list one at a time. When the same friction type keeps firing on the same page or element across multiple sessions, Flusterduck clusters those signals into a single **issue**, with a plain-language title, a severity bounded by how many users it actually reached, a confidence grade, a revenue estimate, and an AI diagnosis grounded in your page's actual content when your trial or plan allowance is available. That ranked issue list is the product; detectors, signals, and friction types are the machinery underneath it.
 
 Read more: [Signals reference](/signals) · [Issues](/issues) · [Scoring](/scoring)
 

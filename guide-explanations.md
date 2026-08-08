@@ -52,31 +52,31 @@ The `data-fd-guide` attribute bypasses all caching. Its content is always used v
 
 ## Prefetching
 
-On page load, the SDK scans the visible viewport for interactive elements, batches their fingerprints, and requests cached explanations in a single call. This pre-warms the in-memory cache so the first hover on any visible element is instant, not just the second.
+On page load, the SDK scans the visible viewport for interactive elements, batches their fingerprints, and requests cached explanations in a single call. This pre-warms the in-memory cache so the first hover on any visible element is instant. Users do not have to wait for a second hover.
 
 Prefetching only requests elements that already have cached explanations on the edge. It doesn't trigger AI generation. The cost is one lightweight network request per page load.
 
-## Cost and budgeting
+## Guide allowance
 
-Guide uses a fast, cost-effective model for generation. Each explanation is roughly 300 input tokens (element context + friction data) and 100-150 output tokens (the explanation itself).
+Guide uses a fast model for generation. Each explanation is roughly 300 input tokens (element context + friction data) and 100-150 output tokens (the explanation itself).
 
-Every Flusterduck plan includes a monthly Guide allocation. The allocation scales with your plan tier because higher tiers serve more sessions, which means more hovers, which means more AI calls. The included amount is designed to cover normal usage with room to spare.
+The three-day trial includes a fixed Guide allowance for the lifetime of the trial. It does not reset when the calendar month changes. Paid plans include a monthly Guide allowance that scales with the plan tier.
 
-When the allocation is spent, Guide degrades gracefully: cached explanations still work (they're free), but new AI generations pause until the next billing cycle or until you add overage capacity. The floating button shows a subtle indicator when the budget is low.
+When the allowance is used, cached explanations still work, but new AI generations pause. During a trial, Billing offers **Start my plan now**. On a paid plan, generation resumes at the start of the next month or after a plan upgrade. There is no add-on capacity to buy.
 
-### What counts against the budget
+### What uses the allowance
 
-Only live AI generations count. Cache hits at any layer (in-memory, local storage, edge) are free. `data-fd-guide` attribute explanations are free. Prefetch requests are free (they only return already-cached content).
+Only live AI generations use the allowance. Cache hits at any layer (in-memory, local storage, edge) do not. `data-fd-guide` attribute explanations and prefetch requests also do not use it.
 
-In practice, the cache handles 90%+ of hovers after the first few sessions on each page. The budget covers the cold starts and the long tail of rarely-visited elements.
+In practice, the cache handles 90%+ of hovers after the first few sessions on each page. The allowance covers cold starts and the long tail of rarely visited elements.
 
 ## Monitoring usage
 
 The dashboard shows Guide usage alongside your other Flusterduck metrics:
 
-- Total hovers this billing period
+- Total hovers this trial or month
 - Cache hit rate (broken down by layer)
-- AI generations used vs. allocation remaining
+- AI generations used vs. allowance remaining
 - Top elements by hover count (which elements users ask about most)
 - Friction reduction on Guide-explained elements vs. unexplained ones
 

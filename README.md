@@ -17,7 +17,7 @@ Prefer one file over fifty? [flusterduck.com/llms-full.txt](https://flusterduck.
 
 ## What Flusterduck is
 
-Automatic issue tracking for UX friction. A small script watches for behavioral signals of confusion on your site (rage clicks, dead clicks, backtracking, form abandonment, and more), clusters them into concrete issues with evidence, and verifies against your deploys whether a fix actually worked. No session replay, no DOM recording, no PII.
+Automatic issue tracking for UX friction. A small script watches for behavioral signals of confusion on your site (rage clicks, dead clicks, backtracking, form abandonment, and more), clusters them into concrete issues with evidence, and verifies against your deploys whether a fix actually worked. No session replay, DOM recording, form values, or user-typed text. Short element labels are PII-redacted before they leave the browser.
 
 ## For agents and tooling
 
@@ -25,4 +25,4 @@ Automatic issue tracking for UX friction. A small script watches for behavioral 
 - **MCP server**: `@flusterduck/mcp-server` (binary `flusterduck-mcp`) exposes live scores, issues, deploys, and recommendations to Claude, Cursor, and any MCP client. See [mcp.md](mcp.md).
 - **Agent skills**: ready-made Claude Agent Skills for triage, fix verification, page investigation, and setup live at [github.com/flusterduck/skills](https://github.com/flusterduck/skills). Background in [agent-skills.md](agent-skills.md).
 
-Flusterduck is a paid, proprietary product with a 3-day free trial. Plans and pricing: [flusterduck.com/pricing](https://flusterduck.com/pricing).
+Flusterduck is a paid, proprietary product. Each organization gets one 3-day, card-backed trial. The trial includes capped AI detection, diagnosis, Guide, and one manual Autofix. Plans and pricing: [flusterduck.com/pricing](https://flusterduck.com/pricing).

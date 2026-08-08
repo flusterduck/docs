@@ -8,7 +8,7 @@ The fastest way to install: paste one tag before the closing `</body>`, no build
 <script src="https://flusterduck.com/d.js" data-key="fd_pub_xxxxxxxxxxxx" data-dnt="false" async></script>
 ```
 
-Replace `fd_pub_xxxxxxxxxxxx` with your publishable key from Settings > API Keys. Keep `data-dnt="false"`: the SDK captures no PII (element labels are redacted before they leave the browser), no form values, and the default Do Not Track behavior silently drops 30-50% of visitors (Firefox, Brave, privacy extensions) for no privacy benefit here.
+Replace `fd_pub_xxxxxxxxxxxx` with your publishable key from Settings > API Keys. Keep `data-dnt="false"`: the SDK does not capture form values or user-typed text, and short element labels are PII-redacted before they leave the browser. The default Do Not Track behavior silently drops 30-50% of visitors (Firefox, Brave, privacy extensions) without changing those collection boundaries.
 
 The bootstrap reads its config from `document.currentScript`, and falls back to `document.querySelector('script[data-key^="fd_pub_"]')` if that's unset, so injecting the tag dynamically (`document.createElement('script')`, tag managers, etc.) works too, as long as `async` and `data-key` are set.
 

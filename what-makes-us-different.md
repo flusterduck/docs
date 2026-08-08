@@ -24,4 +24,4 @@ Flusterduck does not drown you in charts and leave you to figure it out. When it
 
 ## Privacy is built in, not bolted on
 
-We made a deliberate choice: behaviour only. No screen recordings, no reading what people type, no personal data. That is not a setting you turn on. It is how the product is built. You get the insight without collecting things you would rather not be responsible for.
+We made a deliberate choice: behaviour without recordings. No screen recordings, no form values, and no reading what people type. Short element labels are PII-redacted before they leave the browser. That is not a setting you turn on. It is how the product is built.

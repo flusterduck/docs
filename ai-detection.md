@@ -2,7 +2,7 @@
 
 AI detection puts an AI analyst on your site. Each night it reads a compressed summary of the day's real sessions, investigates whatever looks off, and files issues itself: pulled sessions, page content, deploy timing, and cursor movement all feed the same investigation a good UX analyst would run by hand.
 
-It is on by default for every site. Built-in pattern detection remains as the fallback: if a month's AI allowance runs out early, it takes over filing new issues until the 1st. You can opt a site out any time under Settings, then AI.
+It is on by default for every site. Built-in pattern detection remains as the fallback: if a paid month's AI allowance runs out early, it takes over filing new issues until the next month. You can opt a site out any time under Settings, then AI.
 
 ## What it does differently
 
@@ -18,14 +18,14 @@ The analyst keeps a working model of each site: what the product is, its money p
 
 Settings, then AI shows every investigation: when it ran, how many steps it took, and how many issues it filed. Owners and admins also get a Run now button there, so you can watch a run land right after a deploy or a traffic spike instead of waiting for tonight. On-demand runs use the same allowance and the same verification bar as nightly ones.
 
-## Cost and the graceful fallback
+## What happens when the allowance runs out
 
-AI detection runs on Flusterduck's infrastructure inside your plan's AI allowance. There is nothing to configure and no per-run bill. If a month's allowance runs out early, built-in detection takes over minting new issues for the rest of the month, and the analyst resumes on the 1st. Real-time scores, alerts, and deploy verification are unaffected either way; they never depend on the nightly run.
+AI detection runs on Flusterduck's infrastructure inside your AI allowance. There is nothing to configure and no per-run bill. On a paid plan, the allowance resets each calendar month. If it runs out early, built-in detection takes over filing new issues until the next month. Real-time scores, alerts, and deploy verification are unaffected either way; they never depend on the nightly run.
 
-During a trial the analyst runs with a small fixed allowance so you can see it work before subscribing.
+The three-day trial has its own fixed allowance. It lasts for the whole trial, even when the trial crosses into a new month. When it is used, built-in detection keeps filing issues for the rest of the trial.
 
 ## What it never does
 
-- It never records your users. The analyst reads the same behavioral events the SDK already sends: no session replay, no keystrokes, no form values, no PII.
+- It never creates a visitor-session recording. The analyst reads structured behavioral events and, when available, bounded content fetched from the configured public page. It gets no replay, keystrokes, form values, or visitor-typed text.
 - It never files an uncited issue. Every issue names the sessions behind it.
 - It never touches your site or your code. Filing issues is the whole job; Autofix stays a separate, separately-permissioned feature.

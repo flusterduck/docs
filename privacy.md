@@ -1,30 +1,38 @@
 # Privacy and Data Collection
 
-Flusterduck measures behavioral patterns, not personal data. No session replay, no form values, no text content, no raw IPs. This page is the full accounting of what actually gets collected.
+Flusterduck measures behavioral patterns without session replay. It does not collect form values or user-typed text, and it never stores raw IP addresses. This page accounts for what the product does collect, including the narrow text context that makes an issue readable.
 
 ## What the SDK collects
 
-**Interaction events.** Clicks, taps, scrolls, focus events, and keyboard interactions. Specifically: which element was interacted with (CSS selector), coordinates relative to the element, and timestamp. Not what was typed.
+**Interaction events.** Clicks, taps, scrolls, focus events, and keyboard interactions. Specifically: which element was involved, coordinates relative to it, a timestamp, and, when useful, a short accessible label such as "Apply coupon." Labels are capped and PII-redacted before they leave the browser. Input values and user-typed text are not read.
 
 **Timing data.** How long users spend on pages, how long they pause on form fields, how long loads take. Millisecond durations.
 
 **Navigation data.** Page paths and the sequence of pages within a session. Query string values are not captured by default.
 
-**Derived signals.** The SDK processes raw interaction events locally to detect friction patterns before sending anything. What leaves the browser is the signal type and any metadata you provide, not the raw event stream.
+**Structured events and derived signals.** The SDK turns interactions into small typed records and detects friction patterns locally. Some features keep a short sequence of structured breadcrumbs so an issue can show what happened. Flusterduck does not produce replay video, DOM snapshots, or a copy of the page.
 
 **Session identifiers.** A random string used to group signals. By default it is stored in a Flusterduck session cookie for continuity; with `cookieless: true`, it is memory-only and resets on page load. Not tied to any user identity unless you call `identify()`.
 
 ## What the SDK never collects
 
-No passwords, credit card numbers, names, addresses, or any input a user types. This is enforced at the SDK level: the SDK doesn't attach the kind of listeners that could capture keystrokes or form values.
+No input values or user-typed text, including passwords and payment details. This is enforced at the SDK level: the SDK does not attach the kind of listeners that could capture keystrokes or form values.
 
-No text content. The SDK doesn't read what's on your pages. No labels, headings, paragraphs, or DOM text of any kind.
+No arbitrary page copy or user-entered text. The SDK may read a short label from the specific element involved in an interaction so evidence is understandable. It never reads an input's value or text inside a content-editable field. Labels are length-capped and PII-redacted in the browser, then scrubbed again at ingestion.
+
+The label redactor targets email addresses, web addresses, IBANs, and phone- or card-length digit runs. It cannot reliably infer every personal name or free-form postal address in static interface copy. Do not render personal data into labels on tracked controls; use `data-fd-ignore` on any area that can contain it.
 
 No session replay. No video recording, no screenshot capture, no DOM serialization.
 
 No raw IP addresses. IPs are hashed before storage and are never written to disk in recoverable form.
 
-No emails or names via `identify()`. If you attach an identifier, use an opaque internal ID.
+No names or emails are added automatically. If you call `identify()`, use an opaque internal ID rather than a name or email address.
+
+## Public page context used by AI
+
+When AI detection or diagnosis is available, Flusterduck may fetch a bounded copy of the configured site's publicly reachable page content. That content helps the analyst tell a broken control from an intentional one. It is fetched from the public page, not reconstructed from a visitor session, and does not include form values or text a visitor typed.
+
+Guide sends only the hovered element's role, state, selector, short accessible label, and nearest labeled parent. It does not send the full DOM or a screenshot of the visitor's page.
 
 ## IP addresses
 
@@ -79,9 +87,9 @@ Stops collection immediately, clears the session buffer. The SDK stays loaded bu
 
 ## GDPR
 
-Flusterduck doesn't process personal data as defined under GDPR because it doesn't collect any. IP addresses are hashed at the edge before storage. No name, email, or identifier is collected unless you pass one to `identify()`.
+Flusterduck is designed to minimize personal data, not to make a blanket claim that pseudonymous analytics data falls outside GDPR. The regulation includes online identifiers in its definition of personal data and treats pseudonymisation as processing: [GDPR Article 4](https://eur-lex.europa.eu/eli/reg/2016/679/oj).
 
-If you use `identify()` with internal user IDs that trace back to real people, include Flusterduck behavioral data in your data processing records and honor deletion requests by contacting support with the IDs to purge.
+Treat session identifiers, IP-derived hashes, and any internal user ID you pass to `identify()` according to your own legal obligations. Include Flusterduck in your data-processing records where required and honor deletion requests. This page describes the product's technical boundaries; it is not legal advice.
 
 ## What you put into track() and signal()
 
@@ -93,9 +101,16 @@ Safe for `signal()`: CSS selectors, element labels, page section names, plan IDs
 
 Never pass: names, emails, phone numbers, addresses, order notes, or any text the user typed.
 
-## Subprocessors
+## Subprocessors and service providers
 
-Supabase (database and edge functions), Cloudflare (MCP worker and CDN), Resend (transactional email), Stripe (billing). None receive your users' personal data from Flusterduck's data pipeline.
+- **Supabase** runs the database and edge functions that receive structured behavioral data, pseudonymous session IDs, IP-derived hashes, and redacted element labels.
+- **Anthropic** processes bounded evidence and context for AI detection, diagnosis, Guide, and Autofix when those features run.
+- **context.dev** retrieves publicly reachable page content used to ground AI analysis. It does not receive a visitor replay.
+- **Cloudflare** serves CDN and MCP infrastructure.
+- **Resend** sends transactional email to Flusterduck account members.
+- **Stripe** processes Flusterduck customer billing.
+
+The data sent depends on the feature in use. Form values and user-typed text are excluded from the behavioral pipeline by design.
 
 ## Data retention
 
@@ -105,6 +120,6 @@ Raw events: 90 days. Aggregated scores and issue history: life of your account. 
 
 This is accurate for most privacy policies:
 
-> We use Flusterduck to detect usability issues on our site. Flusterduck collects anonymized behavioral signals (clicks, scroll patterns, navigation) but never records session replay, form values, or personal information.
+> We use Flusterduck to detect usability issues on our site. Flusterduck collects pseudonymous behavioral signals such as clicks, scroll patterns, navigation, and short PII-redacted control labels. It does not record session replay, form values, or user-typed text.
 
 If you're in a jurisdiction with specific disclosure requirements, check with your legal team.

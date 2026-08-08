@@ -59,7 +59,7 @@ Your listener receives an `EmittedSignal`:
 | `meta` | `object` | Detector metadata (counts, distances, timings). |
 | `ts` | `number` | Timestamp in milliseconds. |
 
-It is behavioral only. It never contains form values, text content, or any PII, the same guarantee as everything else Flusterduck collects.
+It is behavioral only. It never contains form values or user-typed text. A signal can include a short element label, PII-redacted before it leaves the browser, so the event is understandable without a replay.
 
 ## The window event
 

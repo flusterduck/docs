@@ -128,7 +128,7 @@ export function Root() {
 }
 ```
 
-`enabled: false` skips initialization entirely. No session, no buffering, nothing recorded. `setConsent(false)` initializes but pauses collection. Anonymous session data accumulates until consent flips. Use `enabled: false` if your legal requirement is zero data before consent. Use `setConsent(false)` if anonymous pre-consent analytics are acceptable and you want to resume without a full re-init.
+`enabled: false` skips initialization entirely. No session, no buffering, nothing recorded. `setConsent(false)` initializes but pauses collection. Pseudonymous, unidentified session data accumulates until consent flips. Use `enabled: false` if your legal requirement is zero data before consent. Use `setConsent(false)` if pre-consent analytics are acceptable and you want to resume without a full re-init.
 
 ## Consent flow
 

@@ -236,7 +236,7 @@ export function Analytics({ consented }: { consented: boolean }) {
 }
 ```
 
-The difference matters for compliance. `setConsent(false)` initializes but pauses. Anonymous session data is captured and held until consent is granted. `enabled: false` skips initialization entirely. Nothing is recorded until it flips to `true`. If your legal requirement is zero data before consent, use `enabled: false`. If anonymous pre-consent analytics are acceptable, `setConsent(false)` is simpler to wire up.
+The difference matters for compliance. `setConsent(false)` initializes but pauses. Pseudonymous, unidentified session data is captured and held until consent is granted. `enabled: false` skips initialization entirely. Nothing is recorded until it flips to `true`. If your legal requirement is zero data before consent, use `enabled: false`. If pre-consent analytics are acceptable, `setConsent(false)` is simpler to wire up.
 
 ## Identifying users
 

@@ -196,7 +196,7 @@ Traditional heatmap tools (Hotjar, Clarity, FullStory) record every mouse moveme
 | | Traditional heatmap | Flusterduck heatmap |
 |---|---|---|
 | Data source | All clicks and mouse movement | Only friction signals (rage, dead, disabled) |
-| Privacy | Often requires session replay | No replay, no PII, no DOM recording |
+| Privacy | Often requires session replay | No replay, DOM recording, form values, or user-typed text; short labels are PII-redacted |
 | Signal-to-noise | Low. Every click is equal. | High. Only confused users appear. |
 | Granularity | Page level only | Element level, viewport level, and per-element ranked list |
 | Purpose | "Where do users click?" | "Where do users struggle?" |
