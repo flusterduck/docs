@@ -64,6 +64,7 @@ Every signal has a fixed weight that reflects how strong an indicator of frictio
 | `multi_step_reset` | 18 |
 | `close_click_reversal` | 18 |
 | `load_abandonment` | 16 |
+| `fixed_control_collision` | 16 |
 | `query_thrashing` | 15 |
 | `filter_spiral` | 15 |
 | `tab_thrash` | 15 |

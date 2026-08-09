@@ -2,7 +2,7 @@
 
 Signals are the raw evidence of user confusion. Every time a user does something that indicates friction, the SDK emits a signal. The scoring engine weighs signals by type, frequency, and recency to compute page confusion scores and cluster repeated patterns into issues.
 
-There are 131 built-in signal types across eight tiers, all detecting on a default install. Any signal can be switched off per site from the served SDK config.
+There are 132 built-in signal types across four tiers, all detecting on a default install. Any signal can be switched off per site from the served SDK config.
 
 ## Tier 1: Direct friction
 
@@ -122,9 +122,9 @@ Signals that correlate directly with lost conversions. These feed the revenue im
 | `value_collapse_downgrade` | User selected a higher plan or tier, then downgraded before completing purchase. Usually indicates a pricing page clarity problem. |
 | `layout_exhaustion_settling` | User scrolled through the full page, returned to the top, and selected an option. They were overwhelmed and had to start over to decide. |
 
-## Opt-in interaction signals
+## Interaction obstruction signals
 
-Three newer detectors target obstruction and blocked-interaction friction. They are **off by default** while we calibrate their thresholds on real traffic, so enable the ones you want explicitly:
+Four detectors target obstruction and blocked-interaction friction. They run on a default install like the rest of the detection layer. Use a per-signal kill switch when a site's interface deliberately creates one of these patterns:
 
 ```ts
 import { init } from 'flusterduck'
@@ -132,9 +132,7 @@ import { init } from 'flusterduck'
 init({
   key: 'fd_pub_...',
   signals: {
-    disabledElementAttempt: { enabled: true },
-    overlayDismissStruggle: { enabled: true },
-    stickyObstructionClick: { enabled: true },
+    fixedControlCollision: { enabled: false },
   },
 })
 ```
@@ -143,7 +141,8 @@ init({
 |---|---|
 | `disabled_element_attempt` | User clicked a disabled (or disabled-looking) control more than once with no response. Either the disabled state is wrong, or there's no explanation of why the control is unavailable. |
 | `overlay_dismiss_struggle` | User pressed Escape and jabbed at the backdrop or close affordance repeatedly while a modal, dialog, or popup stayed open. The dismiss controls aren't working or aren't where users expect. |
-| `sticky_obstruction_click` | User's click landed on a sticky or fixed element (a header, floating bar, or cookie banner) that's covering the interactive target directly beneath it. |
+| `sticky_obstruction_click` | User's click landed on non-interactive sticky or fixed chrome that's covering the interactive target directly beneath it. |
+| `fixed_control_collision` | Two fixed or sticky controls occupy the same tap point, such as a feedback button covering a fixed sign-out control. The upper action receives the tap and the lower action is unreachable. Normal floating actions over page content and controls inside the active modal stay silent. |
 
 Every fire carries a `cf` confidence value (0-1); the scoring engine weighs each fire by it, so a borderline detection counts for less than an unambiguous one.
 
@@ -293,7 +292,7 @@ signal('form_abandonment', {
 })
 ```
 
-The first argument is the signal type: any of the 131 built-in types or a custom string. The second is optional metadata. Never include PII, form values, or anything a user typed.
+The first argument is the signal type: any of the 132 built-in types or a custom string. The second is optional metadata. Never include PII, form values, or anything a user typed.
 
 Custom signal types appear in the dashboard and scoring engine alongside built-in types. They don't get tier weights assigned automatically. The scoring engine treats them as tier 2 by default until enough data accumulates for it to assess their actual impact.
 
@@ -335,8 +334,8 @@ These older signal names still work:
 | `scroll_bounce` | `jerky_scrolling` |
 | `form_hesitation` | `confidence_collapse` |
 | `form_abandon` | `form_abandonment` |
+| `error_encounter` | `error_recovery_loop` |
 | `tap_miss` | `target_near_miss` |
-| `pinch_zoom` | `viewport_thrashing` |
 
 ## How scores and issues work
 
