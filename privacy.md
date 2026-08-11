@@ -22,7 +22,7 @@ No arbitrary page copy or user-entered text. The SDK may read a short label from
 
 The label redactor targets email addresses, web addresses, IBANs, and phone- or card-length digit runs. It cannot reliably infer every personal name or free-form postal address in static interface copy. Do not render personal data into labels on tracked controls; use `data-fd-ignore` on any area that can contain it.
 
-No session replay. No video recording, no screenshot capture, no DOM serialization.
+No session replay. No video recording, no visitor-session screenshot capture, no DOM serialization.
 
 No raw IP addresses. IPs are hashed before storage and are never written to disk in recoverable form.
 
@@ -30,7 +30,11 @@ No names or emails are added automatically. If you call `identify()`, use an opa
 
 ## Public page context used by AI
 
-When AI detection or diagnosis is available, Flusterduck may fetch a bounded copy of the configured site's publicly reachable page content. That content helps the analyst tell a broken control from an intentional one. It is fetched from the public page, not reconstructed from a visitor session, and does not include form values or text a visitor typed.
+When AI detection or diagnosis is available, Flusterduck may fetch bounded rendered text and a logged-out screenshot from a configured site's publicly reachable page. This context is fetched separately from visitor telemetry and is not reconstructed from a visitor session. A public screenshot can contain anything visibly rendered to a logged-out visitor, including public default or prefilled form values. It never contains values entered in a tracked visitor session.
+
+A detecting run can request at most four fresh public-page screenshots. A separate read-only visual reviewer receives each image as base64 data, returns a constrained set of visible-state facts, and has no issue-writing or memory tools. Raw pixels do not enter the issue-writing analyst's saved transcript. Customer-uploaded images for authenticated pages are never sent to either detecting model. For a current-page check, a separate logged-out Chromium worker loads the exact public page at one requested mobile or desktop size and captures the top or one requested vertical position. It can then scroll, hover visible controls, and walk forward and backward through a bounded part of the Tab order, returning numeric outcomes from that fixed visit. It does not run Flusterduck detectors, click, type, submit, sign in, or receive visitor-session data. The image is withheld if a security boundary changes the page before capture or the browser misses the requested position.
+
+A screenshot can confirm only what was visibly rendered at capture time. The browser check can confirm only what happened during its fixed visit. Neither proves user intent, a click path it did not run, a browser-extension or locale state, or a root cause.
 
 Guide sends only the hovered element's role, state, selector, short accessible label, and nearest labeled parent. It does not send the full DOM or a screenshot of the visitor's page.
 
@@ -104,9 +108,9 @@ Never pass: names, emails, phone numbers, addresses, order notes, or any text th
 ## Subprocessors and service providers
 
 - **Supabase** runs the database and edge functions that receive structured behavioral data, pseudonymous session IDs, IP-derived hashes, and redacted element labels.
-- **Anthropic** processes bounded evidence and context for AI detection, diagnosis, Guide, and Autofix when those features run.
-- **context.dev** retrieves publicly reachable page content used to ground AI analysis. It does not receive a visitor replay.
-- **Cloudflare** serves CDN and MCP infrastructure.
+- **Anthropic** processes bounded evidence and context for AI detection, diagnosis, Guide, and Autofix when those features run. For AI detection, a separate read-only model call may receive up to four fresh public-page screenshot images in one investigation.
+- **context.dev** retrieves rendered text and screenshots from publicly reachable pages used to ground AI analysis and page heatmaps. It receives public page URLs, not a visitor replay.
+- **Cloudflare** serves CDN and MCP infrastructure and runs the isolated logged-out browser used for public-page checks.
 - **Resend** sends transactional email to Flusterduck account members.
 - **Stripe** processes Flusterduck customer billing.
 
