@@ -2,28 +2,28 @@
 
 Flusterduck is automatic issue tracking for UX friction.
 
-It watches real user behavior, detects where people get stuck, clusters repeated friction into fixable issues, and verifies whether each fix worked after you ship. No session replay. No watching recordings. No manual digging.
+It watches real user behavior, finds repeated friction, investigates the supporting sessions, and verifies whether each fix worked after you ship. No session replay. No watching recordings. No manual digging.
 
 ## The problem it solves
 
-Most analytics tools tell you where users dropped off. Session replay shows you recordings you have to watch. Neither one automatically tells you what's wrong, why, or what to fix first.
+Most analytics tools tell you where users dropped off. Session replay shows you recordings you have to watch. Neither one turns repeated behavior into a located issue with cited sessions and checked claims.
 
-There's a gap between "conversion dropped 8% on checkout" and "the continue button looks disabled because of the grey border, and 140 users have dead-clicked it in the last two weeks." Flusterduck fills that gap.
+There's a gap between "conversion dropped 8% on checkout" and "140 users dead-clicked the continue button in the last two weeks." Flusterduck fills that gap without guessing why it happened.
 
 ## How it works
 
 The SDK runs in the browser. It listens for behavioral signals, 132 types in all (rage clicks, dead clicks, form abandonment, scroll patterns, keyboard confusion, mobile tap misses, navigation loops, and more), and sends them to the scoring engine. It never records keystrokes or form values. For an element involved in a signal, it may send a short, PII-redacted accessible label so the evidence is readable.
 
-The scoring engine does four things with those signals:
+Flusterduck does four things with those signals:
 
 - Computes a confusion score for each page based on signal frequency, weight, and recency
-- Clusters repeated signals from different users into UX issues with session evidence
+- Sends repeated patterns to the AI investigator, which can file an issue only after its evidence passes the server's checks
 - Estimates revenue impact when you wire conversion events with `track()`
 - Runs verification after each deploy to check whether a fix actually reduced friction
 
 ## What you get
 
-**Issues** are the main output. Each one has a title, root cause hypothesis, affected element, evidence sessions, severity score, and status. They work like Linear tickets: assign them, triage them, mark them resolved. The scoring engine re-checks them after each deploy to confirm the fix held.
+**Issues** are the main output. Each one has a checked description, affected element, cited sessions, severity score, and status. They work like Linear tickets: assign them, triage them, mark them resolved. Flusterduck re-checks them after each deploy to confirm the fix held.
 
 **Scores** give you a per-page confusion rating. Useful for prioritizing what to look at first, and for tracking whether a page is getting better or worse over time.
 

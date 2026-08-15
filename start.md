@@ -14,7 +14,7 @@ New sites take 24-48 hours to produce meaningful scores. You need enough signal 
 
 Issues are what you act on. Each one has a title, an affected element, a signal count, and a severity score. Sort by severity first. Those are the ones where friction is concentrated on a specific element, not just diffuse across a page.
 
-The hypothesis on each issue is the scoring engine's best guess at root cause. It's not always right. Use it as a starting point, not a verdict.
+The diagnosis on each issue says what the cited evidence supports. When the evidence doesn't prove a cause, the issue leaves the cause unknown instead of filling in a guess.
 
 Issues work like tickets. Assign them, update the status as you investigate, mark them resolved after you deploy a fix. The scoring engine re-checks resolved issues after each deploy to confirm the fix held.
 
@@ -57,7 +57,7 @@ Flusterduck records the confusion score before and after each tagged deploy. Thi
 
 Once your site has a few days of data, the MCP integration pays off fast. Instead of checking the dashboard, ask Claude:
 
-> "What's the worst-performing page right now, and what's causing it?"
+> "What's the worst-performing page right now, and what does the evidence prove?"
 
 See [MCP setup](./mcp) for a 5-minute configuration walkthrough.
 

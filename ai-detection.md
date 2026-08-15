@@ -1,14 +1,14 @@
 # AI detection
 
-AI detection puts an AI analyst on your site. Each night it reads a compressed summary of the day's real sessions, then chooses what to investigate. It can pull the underlying sessions, page context, deploy timing, and cursor movement before deciding whether the evidence supports an issue.
+AI detection puts an AI analyst on your site. Each night it reads a compressed summary of the day's real sessions, then chooses what to investigate. It can pull the underlying sessions, page context, deploy timing, cursor movement, and any valid episode receipts before deciding whether the evidence supports an issue.
 
-It is on by default for every site. Built-in pattern detection remains as the fallback: if a paid month's AI allowance runs out early, it takes over filing new issues until the next month. You can opt a site out any time under Settings, then AI.
+It is on by default for every site. Built-in pattern detection continues to power real-time signals, scores, and alerts. If the AI analyst cannot run, unreviewed fallback findings are held instead of being filed as customer issues. You can opt a site out any time under Settings, then AI.
 
 ## What it does differently
 
 Built-in detection recognizes friction patterns it has names for: rage clicks, dead clicks, abandoned forms. The AI analyst is not limited to named patterns. It can connect a checkout struggle and an upgrade-flow struggle into one underlying issue, notice sessions that quietly left the money path without tripping any detector, and use a page's actual content to tell exploration from confusion.
 
-Every issue it files carries receipts. The analyst must open and cite at least two sessions, and Flusterduck verifies those citations against your data before anything is written. When a detector signal informs the finding, the service also checks that the signal occurred in those sessions and that the analyst read its complete interpretation and verification guidance. Claims that do not check out are rejected. One angry session never becomes an issue by itself, and severity is bounded by how many users the evidence actually shows.
+Every issue it files carries receipts. The analyst must open and cite at least two sessions, and Flusterduck verifies those citations against your data before anything is written. When a detector signal informs the finding, the service also checks that the signal occurred in those sessions and that the analyst read its complete interpretation and verification guidance. Claims that do not check out are rejected. Time-based claims need episode receipts from the same cited detector in at least two cited sessions and must use wording the receipts can directly support; otherwise the analyst must use a narrower, non-temporal observation or abstain. One angry session never becomes an issue by itself, and severity is bounded by how many users the evidence actually shows.
 
 ## What it can see on a page
 
@@ -28,9 +28,9 @@ Settings, then AI shows every investigation: when it ran, how many steps it took
 
 ## What happens when the allowance runs out
 
-AI detection runs on Flusterduck's infrastructure inside your AI allowance. There is nothing to configure and no per-run bill. On a paid plan, the allowance resets each calendar month. If it runs out early, built-in detection takes over filing new issues until the next month. Real-time scores, alerts, and deploy verification are unaffected either way; they never depend on the nightly run.
+AI detection runs on Flusterduck's infrastructure inside your AI allowance. There is nothing to configure and no per-run bill. On a paid plan, the allowance resets each calendar month. If it runs out early, new AI-reviewed issues wait until the next allowance period. Built-in signals, real-time scores, alerts, and deploy verification are unaffected; they never depend on the nightly run.
 
-The three-day trial has its own fixed allowance. It lasts for the whole trial, even when the trial crosses into a new month. When it is used, built-in detection keeps filing issues for the rest of the trial.
+The three-day trial has its own fixed allowance. It lasts for the whole trial, even when the trial crosses into a new month. When it is used, unreviewed fallback findings remain held rather than appearing as customer issues.
 
 ## What it never does
 

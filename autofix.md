@@ -1,6 +1,6 @@
 # Autofix
 
-Autofix turns an issue's evidence into a concrete fix: a root cause, the specific change to make, likely places to look, a way to verify it, and a prompt you can paste straight into your coding agent (Claude Code, Cursor). When you connect the Flusterduck GitHub App, Autofix goes further: it researches your repository and opens a **draft pull request** with the change.
+Autofix turns an issue's evidence into a proposed fix: the supported diagnosis, the specific change to make, likely places to look, a way to verify it, and a prompt you can paste straight into your coding agent (Claude Code, Cursor). When you connect the Flusterduck GitHub App, Autofix goes further: it researches your repository and opens a **draft pull request** with the change.
 
 ## Two modes
 
@@ -14,7 +14,7 @@ The model that plans repo-level fixes is Claude Sonnet.
 
 Open any issue and press **Generate fix** on the Autofix card. You get:
 
-- **Root cause**: the specific UX/code cause the evidence supports.
+- **Diagnosis**: the specific UX or code cause when the evidence supports one; otherwise the observed failure only.
 - **The change**: what to change, specific enough to implement.
 - **Likely places to look**: best-guess file/component locations (never asserted as fact).
 - **How to verify**: a manual check or test to confirm the fix worked.

@@ -135,7 +135,7 @@ Show me all pages with a score above 50.
 
 ## How scores relate to issues
 
-Scores are a summary. Issues are the detail. A high score means there's friction on the page. Issues tell you specifically what the friction is, which element it's on, how many users hit it, and what the likely cause is.
+Scores are a summary. Issues are the detail. A high score means there's friction on the page. Issues tell you what the cited sessions prove, which element is involved, how many users hit it, and the cause only when the evidence supports one.
 
 A page can have a high score with no open issues if the signals are dispersed across many elements without enough clustering for the engine to create an issue. That's unusual but possible. It usually means several small problems rather than one big one.
 

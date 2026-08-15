@@ -44,4 +44,4 @@ Read more: [Signals reference](/signals) · [Issues](/issues) · [Scoring](/scor
 
 **Does more detectors mean more data sent from my site?** Barely: signals are tiny structured events (a name, a selector, a redacted label, timestamps), not recordings. There is no session replay and no page content captured from your visitors' sessions.
 
-**Can one user action fire multiple detectors?** Yes, and that's useful: a broken button might draw rage clicks *and* no-op interactions *and* an error signal. Co-occurring signals on the same element are strong evidence they share one root cause, and the clustering treats them that way.
+**Can one user action fire multiple detectors?** Yes, and that's useful: one button might draw rage clicks *and* no-op interactions *and* an error signal. Co-occurring signals on the same element can belong to one incident, but they don't prove why it happened. The investigator checks the sessions before grouping them into an issue.

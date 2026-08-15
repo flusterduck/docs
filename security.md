@@ -6,6 +6,8 @@ Flusterduck collects behavioral signals, not private content. This page covers t
 
 The SDK captures behavioral patterns: clicks, scroll depth, cursor movement, timing between interactions, and the **visible label** of an element a user interacted with (button text, a heading, an aria-label) so traces read in plain language: "Rage click on *Apply coupon*" instead of a bare CSS selector. Labels are PII-redacted **in the browser before anything is sent**: email addresses, phone numbers, card-length digit runs, and web addresses are replaced with `[redacted]` in place. A second, server-side redaction pass runs at ingest as a backstop.
 
+When explicitly enabled for a site, the private-pilot episode recorder can add one bounded state receipt around a detected friction incident. It contains only allow-listed element states, rounded geometry changes, count-only mutations, passive request status and duration, hit-target selectors, and length-only form evidence. It never records DOM content, form values, typed text, request bodies, headers, or query strings. It remains idle on sessions without a mapped friction incident and is off by default.
+
 What is never collected, by architecture rather than configuration:
 
 - No session replay or screen recording

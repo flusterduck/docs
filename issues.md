@@ -1,20 +1,16 @@
 # Issues
 
-An issue is what Flusterduck produces when enough users hit the same friction pattern on the same element. Not a raw signal count. A clustered, evidence-backed problem with a specific location, a root cause hypothesis, and a lifecycle that tracks whether it got fixed.
+An issue is what Flusterduck produces when repeated friction survives an evidence check. It's a specific, located problem with cited sessions and a lifecycle that tracks whether it got fixed.
 
 Issues work like tickets. They get statuses, triage notes, assignees, and verification after you ship a fix.
 
 ## How issues are created
 
-The scoring engine watches for signal clusters: the same signal type on the same element, repeated across sessions from different users. When a cluster crosses the confidence threshold, an issue is created.
+Signals and scores tell the nightly AI investigator where to look. They don't create an issue by themselves while AI detection is enabled. The investigator must open the underlying sessions, check the page and detector evidence, and pass the server's write gate before an issue reaches your board.
 
-One user rage-clicking a button 40 times doesn't create an issue. Forty different users rage-clicking the same button over three days does.
+Every new AI issue needs at least two opened sessions with events on the claimed page. A cited detector must occur in those sessions, and the investigator must read that detector's interpretation and verification rules. Time-based claims need matching bounded episode receipts from the same detector in both sessions. Severity and confidence are capped by the evidence shown.
 
-The clustering algorithm weighs:
-- Signal type match (same type, or co-occurring types on the same element)
-- Element selector match (fuzzy-matched to handle minor DOM changes between deploys)
-- Session diversity (signals from distinct sessions, not a single frustrated user)
-- Time window (7 days for initial creation, longer for ongoing patterns)
+If the AI allowance runs out, new filing pauses. Raw signals and known issue counts continue updating, but the scoring path can't write a new issue, change an existing diagnosis, or reopen a verified issue. Sites that explicitly turn AI detection off use the deterministic scoring path instead. See [AI detection](./ai-detection) for the full evidence rules.
 
 ## Issue fields
 
@@ -28,7 +24,7 @@ The clustering algorithm weighs:
 | `signal_count` | Total signals in the cluster |
 | `severity` | 0-100 score based on signal tier, volume, page importance, and revenue exposure |
 | `status` | Current lifecycle state |
-| `hypothesis` | Engine-generated root cause guess |
+| `hypothesis` | Evidence-checked diagnosis; cause details are omitted when unsupported |
 | `sessions` | Session IDs containing this friction pattern |
 | `verifications` | Deploy-correlated verification records |
 
@@ -42,7 +38,7 @@ The clustering algorithm weighs:
 
 **`verified`**: the issue was resolved and the scoring engine confirmed the fix held after the next deploy. The friction pattern didn't return.
 
-**`regressed`**: the issue was resolved, but the confusion pattern came back. The engine re-opens it automatically. This happens when a fix gets reverted, a related change reintroduces the problem, or the original fix was partial.
+**`regressed`**: the issue was resolved, but fresh investigation found the problem again. Reopening uses the same cited-session and claim checks as every other AI issue update.
 
 **`ignored`**: known issue, won't fix. Alert rules won't fire for ignored issues, and they won't count toward your open issue total. Use this deliberately, not as a way to clear your queue.
 
@@ -93,7 +89,7 @@ Verification needs deploy records to work correctly. Without them, the engine ca
 
 ## Evidence sessions
 
-Every issue includes a `sessions` array: session IDs where the friction pattern appears. These are the most useful thing in an issue for diagnosing root cause.
+Every issue includes a `sessions` array: session IDs where the friction pattern appears. Use them to check the diagnosis and any cause claim.
 
 ```bash
 curl "https://api.flusterduck.com/v1/session?session_id=ses_xxxxxxxxxxxx" \
@@ -109,15 +105,11 @@ Investigate session ses_xxxxxxxxxxxx.
 Which sessions show rage clicks on the upgrade button?
 ```
 
-## Root cause hypotheses
+## Diagnosis and hypotheses
 
-The engine generates a hypothesis for every issue based on signal type and element context:
+A behavioral signal proves the behavior it measured. It doesn't prove the technical cause. Flusterduck rejects causal wording and mechanism-specific repair advice unless the cited evidence supports them. When the evidence supports only the observed pattern, the issue says only what happened.
 
-- Dead clicks on a button: "Element appears clickable but navigates to an unexpected destination or produces no visible response."
-- Rage clicks on a form field: "Field appears interactive but input is blocked or significantly delayed."
-- Form abandonment at a specific step: "Required information may be unclear, the step label may not match user expectation, or a validation message is obscured."
-
-Hypotheses are starting points. They're generated from behavioral signals, not from visual inspection of your UI. Confirm or reject them with the session evidence and your own knowledge of the page.
+Bounded page inspection and episode receipts can support narrower facts, including a known response status, a sampled loading-state transition, a mismatched click target, or an overlap that remained after layout activity settled. Unsupported details are left out.
 
 ## Getting all issues via the API
 

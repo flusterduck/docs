@@ -12,6 +12,8 @@ Flusterduck measures behavioral patterns without session replay. It does not col
 
 **Structured events and derived signals.** The SDK turns interactions into small typed records and detects friction patterns locally. Some features keep a short sequence of structured breadcrumbs so an issue can show what happened. Flusterduck does not produce replay video, DOM snapshots, or a copy of the page.
 
+**Optional episode evidence.** When a site explicitly enables this private-pilot feature, the SDK may send one small state packet around a detected friction incident. The packet can contain enum or boolean element states, rounded geometry changes, count-only DOM mutations, passive request status and duration, the selector that received a click, and a form submit receipt with invalid selectors and field lengths. It never contains DOM content, form values, typed text, request bodies, headers, or query strings. It emits no episode packet for calm sessions and is off by default.
+
 **Session identifiers.** A random string used to group signals. By default it is stored in a Flusterduck session cookie for continuity; with `cookieless: true`, it is memory-only and resets on page load. Not tied to any user identity unless you call `identify()`.
 
 ## What the SDK never collects
@@ -22,7 +24,7 @@ No arbitrary page copy or user-entered text. The SDK may read a short label from
 
 The label redactor targets email addresses, web addresses, IBANs, and phone- or card-length digit runs. It cannot reliably infer every personal name or free-form postal address in static interface copy. Do not render personal data into labels on tracked controls; use `data-fd-ignore` on any area that can contain it.
 
-No session replay. No video recording, no visitor-session screenshot capture, no DOM serialization.
+No session replay. No video recording, no visitor-session screenshot capture, no DOM serialization. Optional episode evidence is a bounded structured receipt, not a page reconstruction.
 
 No raw IP addresses. IPs are hashed before storage and are never written to disk in recoverable form.
 
@@ -124,6 +126,6 @@ Raw events: 90 days. Aggregated scores and issue history: life of your account. 
 
 This is accurate for most privacy policies:
 
-> We use Flusterduck to detect usability issues on our site. Flusterduck collects pseudonymous behavioral signals such as clicks, scroll patterns, navigation, and short PII-redacted control labels. It does not record session replay, form values, or user-typed text.
+> We use Flusterduck to detect usability issues on our site. Flusterduck collects pseudonymous behavioral signals such as clicks, scroll patterns, navigation, short PII-redacted control labels, and, when enabled, bounded state evidence around detected friction. It does not record session replay, form values, or user-typed text.
 
 If you're in a jurisdiction with specific disclosure requirements, check with your legal team.

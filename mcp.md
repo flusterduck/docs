@@ -143,7 +143,7 @@ Both surfaces expose the same data; pick by where the agent runs. MCP is right f
 
 **Read-only** (`mcp:read`): all query tools and prompts, including `whoami` (introspect the key's scope and permissions). Can't write anything. Start here.
 
-**Read + write** (`mcp:read` + `manage:write`): adds `update_issue`, `rate_issue`, `update_alert`, `add_annotation`, `create_alert_rule`, `update_alert_rule`, `delete_alert_rule`, and `send_feedback`. Needed for triage and annotation workflows.
+**Read + write** (`mcp:read` + `manage:write`): adds `update_issue`, `update_alert`, `add_annotation`, `create_alert_rule`, `update_alert_rule`, `delete_alert_rule`, and `send_feedback`. Needed for triage and annotation workflows.
 
 ## Prompts
 
@@ -163,7 +163,7 @@ Most useful first thing Monday morning before standup.
 
 ### diagnose_page
 
-Five-step diagnosis for a specific page. Returns: current friction score, top signal sources by volume, worst-performing element, likely root cause, and one concrete fix recommendation.
+Five-step diagnosis for a specific page. Returns the current friction score, top signal sources by volume, worst-performing element, and the narrowest diagnosis the evidence supports. If the cause or fix isn't proved, it says so.
 
 ```
 page_path: "/settings/billing"
@@ -193,8 +193,8 @@ The AI runs this automatically:
 2. `get_page` with `/checkout`: sees the confusion score jumped from 14 to 38 in the hour after
 3. `get_issues` filtered to `open`: two issues opened within 90 minutes of the deploy, a rage click spike on `#place-order` and elevated form abandonment on the payment step
 4. `get_elements` scoped to `/checkout`: `#place-order` has 52 rage clicks in 24 hours, baseline is 5/day
-5. `diagnose_page`: returns root cause. The button appears inactive during payment processing with no visual indication, causing repeated clicking.
-6. `add_annotation`: "Deploy 2026-06-09: /checkout confusion +171%. #place-order rage clicks 10x baseline. Root cause: missing loading state on payment submit."
+5. `diagnose_page`: confirms the repeated clicks and checks whether the issue has receipts for a loading-state or request outcome. If those receipts aren't present, it leaves the cause unknown.
+6. `add_annotation`: "Deploy 2026-06-09: /checkout confusion +171%. #place-order rage clicks 10x baseline. Cause not proved by the cited evidence."
 
 The whole sequence runs in about 30 seconds and leaves a permanent timeline marker.
 
@@ -293,13 +293,6 @@ assigned_to: "eng-lead"
 ```
 
 Status options: `open`, `triaged`, `in_progress`, `verified`, `resolved`, `ignored`.
-
-**`rate_issue`**: Rate a detected issue's accuracy. `confirmed` means it described a real problem, `rejected` means it was a false positive or noise. Ratings feed the detection accuracy metric without changing the issue's status. Pass `null` to clear a previous rating.
-
-```
-issue_id: "3a7f2c9d-4e1b-42d8-9c5a-1f6b8e2d4a7c"
-verdict: "confirmed"
-```
 
 **`send_feedback`**: Send product feedback about Flusterduck itself to the Flusterduck team. Use `suggestion` for a missing capability, confusing tool output, or data you wished you had; use `bug` when a tool or surface misbehaved. This is how you (or your AI assistant, mid-workflow) tell us what to build next.
 
