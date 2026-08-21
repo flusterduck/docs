@@ -18,6 +18,22 @@ When the current page behavior matters, the analyst can also request a fixed log
 
 A screenshot can confirm visible facts such as a covered footer, wrapped text, or a blurred result. A close-up proves only what appears inside its selected rectangle. The fixed browser check can report what its own bounded scroll, hover, and Tab walk measured. None of these checks proves why a real user clicked, which code caused a problem, or behavior outside the tested viewport and steps. Customer-uploaded images for authenticated pages are never sent to the detecting model.
 
+## Optional code evidence
+
+Code evidence is generally available as an optional per-site connection. Tier 1 connects the site to one exact GitHub repository without reading source. Tier 2 lets the analyst search that repository and read up to three source files during one investigation. Tier 3 is reserved for code-found issue filing after the private precision canary passes.
+
+When a deploy has a commit SHA, every source read is pinned to that deployed commit. Flusterduck resolves abbreviated SHAs through GitHub before reading. Without a deploy SHA, the analyst may inspect the current default-branch tip, but the receipt says `pinned=false` and the result cannot stand alone as proof for a code-found issue.
+
+The code tools return server-made receipts with the repository, full SHA, file, line number, and content hash. The analyst may see a short source excerpt for one turn. Source text and diff patches are removed before the investigation transcript is saved. A literal search that cannot account for generated class names, delegated handlers, feature flags, or runtime state returns inconclusive instead of turning uncertainty into a public issue.
+
+When a receipt supports a session-backed issue, the issue keeps that receipt id. Owners and admins can open the code location on issue detail. Flusterduck fetches the file again from the recorded commit, checks its content hash, and shows the recorded line with a small amount of surrounding code. The source is fetched live and is not added to the issue record. If GitHub access, the site mapping, the commit, or the hash no longer matches, the viewer shows no code.
+
+A complete no-match can mark one proposed JavaScript-error source diagnosis false. The searched error must be an exact error captured in the cited sessions, the repository search must read at least one source file without a failed or truncated read, and every original issue session must be reopened. A repeated hard browser failure always wins over missing source text. Existing issues qualify only while they are untouched open AI findings. An assignment, status action, freeze, note, re-scan, Autofix request, or tracker action protects the issue from automatic dismissal.
+
+Only the detecting AI can create a false-by-code verdict. The database independently rechecks the active investigation, organization, site, mapped repository, deployed commit, receipt, and complete-search facts before recording it. A person can ignore or reopen an issue, but cannot label an issue false by code. The issue detail page names the AI verdict and how many files were searched. Repository and commit coordinates remain in the private proof ledger, while owners and admins can open supporting source locations through the protected inline viewer. The cited sessions stay on the record.
+
+Code-only filing is not active yet. Flusterduck records no-matches from selector and error-string searches, then manually checks a fixed sample on at least two sites. The gate requires enough decided audits from both search tools and a false-absence rate at or below the configured ceiling. Until that real-world gate passes, code can support or narrowly disprove a session-backed diagnosis, but code alone cannot create an issue.
+
 ## The analyst remembers your site
 
 The analyst keeps a working model of each site: what the product is, its money paths, its weak points, and a ledger of hypotheses it is watching. A pattern too thin to file tonight accumulates evidence across nights and gets filed when it clears the bar. Issues it files again update in place rather than duplicating.
@@ -36,4 +52,5 @@ The three-day trial has its own fixed allowance. It lasts for the whole trial, e
 
 - It never creates a visitor-session recording. The analyst reads structured behavioral events and, when useful, bounded rendered text and fresh logged-out screenshots fetched separately from the configured public page. It gets no replay, keystrokes, visitor-entered form values, or visitor-typed text. A public screenshot can contain anything visibly rendered to a logged-out visitor, including public default or prefilled values.
 - It never files an issue from one session. Every issue names at least two examined sessions behind it.
-- It never clicks, types, submits, signs in, changes site data, or changes your code. Its browser check is limited to loading, scrolling, hovering, and walking Tab order. Filing issues is the whole job; Autofix stays a separate, separately-permissioned feature.
+- It never guesses a repository or falls back to another GitHub connection. Missing or revoked source access keeps the investigation session-only.
+- It never clicks, types, submits, signs in, changes site data, or changes your code. Its browser check is limited to loading, scrolling, hovering, and walking Tab order. Investigating and maintaining issue evidence is the whole job; Autofix stays a separate, separately-permissioned feature.

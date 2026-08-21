@@ -40,6 +40,16 @@ A screenshot can confirm only what was visibly rendered at capture time. The bro
 
 Guide sends only the hovered element's role, state, selector, short accessible label, and nearest labeled parent. It does not send the full DOM or a screenshot of the visitor's page.
 
+## Source code used by AI detection
+
+Source access is off by default and is granted per site. With code evidence enabled at Tier 2 or 3, Flusterduck reads only the GitHub repository mapped to that site. The read token is limited to that one repository and requests read access to repository contents.
+
+When a production deploy includes a commit SHA, code checks read that deployed commit. Short SHAs are resolved to the full GitHub SHA first. If the deploy has no commit SHA, a read may use the current default-branch tip, but the result is marked unpinned and cannot be the sole proof for a code-found issue.
+
+The detection model may receive a short source excerpt while it investigates a receipt. Flusterduck stores the repository, ref, full SHA, file, line number, and a server-computed content hash. It does not store the source excerpt or a diff patch in the investigation transcript. Search results also state when a bounded literal search is inconclusive, since generated class names and delegated event handlers can evade that search.
+
+The GitHub App may separately request write permission for Autofix. AI detection never receives that write-capable token. Autofix uses a separate token and can only open a draft pull request through its own approval and safety checks.
+
 ## IP addresses
 
 When events reach the server, the IP is hashed using a one-way function. The original is never stored. The hash is used only for session deduplication and rate limiting.
@@ -110,7 +120,7 @@ Never pass: names, emails, phone numbers, addresses, order notes, or any text th
 ## Subprocessors and service providers
 
 - **Supabase** runs the database and edge functions that receive structured behavioral data, pseudonymous session IDs, IP-derived hashes, and redacted element labels.
-- **Anthropic** processes bounded evidence and context for AI detection, diagnosis, Guide, and Autofix when those features run. For AI detection, a separate read-only model call may receive up to four fresh public-page screenshot images in one investigation.
+- **Anthropic** processes bounded evidence and context for AI detection, diagnosis, Guide, and Autofix when those features run. For AI detection, a separate read-only model call may receive up to four fresh public-page screenshot images in one investigation. When a site opts into code evidence, the detection model may also receive short source excerpts from that site's mapped repository.
 - **context.dev** retrieves rendered text and screenshots from publicly reachable pages used to ground AI analysis and page heatmaps. It receives public page URLs, not a visitor replay.
 - **Cloudflare** serves CDN and MCP infrastructure and runs the isolated logged-out browser used for public-page checks.
 - **Resend** sends transactional email to Flusterduck account members.
