@@ -22,7 +22,7 @@ A screenshot can confirm visible facts such as a covered footer, wrapped text, o
 
 Code evidence is generally available as an optional per-site connection, and you choose how much of it Flusterduck may read.
 
-**Link only** connects the site to one exact GitHub repository without reading source. **Read to verify** lets the analyst search that repository and read up to three source files during one investigation. A third level, reads that file issues found in the code itself, is held back until the private precision canary passes.
+**Link only** connects the site to one exact GitHub repository without reading source. **Read and use for issues** is the recommended setting: it lets the analyst search that repository and read up to three source files during one investigation, so an issue can name the file and line behind it. A third level, reads that file issues found in the code itself, is held back until the private precision canary passes.
 
 When a deploy has a commit SHA, every source read is pinned to that deployed commit. Flusterduck resolves abbreviated SHAs through GitHub before reading. Without a deploy SHA, the analyst may inspect the current default-branch tip, but the receipt says `pinned=false` and the result cannot stand alone as proof for a code-found issue.
 
