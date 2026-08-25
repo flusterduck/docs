@@ -42,7 +42,7 @@ Guide sends only the hovered element's role, state, selector, short accessible l
 
 ## Source code used by AI detection
 
-Source access is off by default and is granted per site. With code evidence enabled at Tier 2 or 3, Flusterduck reads only the GitHub repository mapped to that site. The read token is limited to that one repository and requests read access to repository contents.
+Source access is off by default and is granted per site. A site set to Link only stores which repository it ships from and nothing is read. Once source reads are approved for a site, Flusterduck reads only the GitHub repository mapped to it. The read token is limited to that one repository and requests read access to repository contents.
 
 When a production deploy includes a commit SHA, code checks read that deployed commit. Short SHAs are resolved to the full GitHub SHA first. If the deploy has no commit SHA, a read may use the current default-branch tip, but the result is marked unpinned and cannot be the sole proof for a code-found issue.
 

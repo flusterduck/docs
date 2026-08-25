@@ -20,7 +20,9 @@ A screenshot can confirm visible facts such as a covered footer, wrapped text, o
 
 ## Optional code evidence
 
-Code evidence is generally available as an optional per-site connection. Tier 1 connects the site to one exact GitHub repository without reading source. Tier 2 lets the analyst search that repository and read up to three source files during one investigation. Tier 3 is reserved for code-found issue filing after the private precision canary passes.
+Code evidence is generally available as an optional per-site connection, and you choose how much of it Flusterduck may read.
+
+**Link only** connects the site to one exact GitHub repository without reading source. **Read to verify** lets the analyst search that repository and read up to three source files during one investigation. A third level, reads that file issues found in the code itself, is held back until the private precision canary passes.
 
 When a deploy has a commit SHA, every source read is pinned to that deployed commit. Flusterduck resolves abbreviated SHAs through GitHub before reading. Without a deploy SHA, the analyst may inspect the current default-branch tip, but the receipt says `pinned=false` and the result cannot stand alone as proof for a code-found issue.
 
