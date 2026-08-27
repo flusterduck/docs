@@ -6,12 +6,12 @@ Flusterduck needs to know when you shipped. Without it, the engine can't tell a 
 
 Connect a repository under Settings, Sites and Flusterduck watches it. Nothing to install and nothing to run in CI.
 
-It reads two things, in this order:
+It reads two things, in this order.
 
-1. **GitHub Deployments.** Vercel, Netlify, Render, Fly and most deploy actions create one of these on every ship. A deployment whose latest status is `success`, in a production environment, is recorded as a deploy.
-2. **Your default branch moving.** Used when there are no GitHub Deployments to read. For the many teams whose `main` branch is what runs in production, this is the same answer.
+1. **GitHub deployments.** Vercel, Netlify, Render, Fly and most deploy actions create one of these on every ship. A deployment whose latest status is `success`, in a production environment, is a real deployment: something told us this went live.
+2. **Commits on your default branch.** Used when there are no GitHub deployments to read. This is a commit, not a deployment. For the many teams whose `main` branch is what runs in production it points at the same code, but nothing has confirmed that it shipped.
 
-Which one produced a given record is stored on it, so you can always tell an observed deploy from an inferred one.
+Those are two different things and Flusterduck keeps them apart. Which one produced a given record is stored on it, and one place treats them differently: an issue can only be automatically retracted on the evidence that your source does **not** contain something, and that requires a real deployment. A commit is not enough to overrule a problem a visitor actually hit.
 
 A deployment that failed is not recorded. Neither is a preview environment. Nothing is recorded twice: if you also run the CLI or post to the API, the commit is matched and you get one deploy, not two.
 
