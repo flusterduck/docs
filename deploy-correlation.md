@@ -1,8 +1,25 @@
 # Deploy Correlation
 
-Record every deploy. One API call. Without it, the engine can't distinguish a friction spike caused by a broken release from a spike caused by a traffic surge or a bad email campaign. It also can't verify that your fixes actually worked after you ship.
+Flusterduck needs to know when you shipped. Without it, the engine can't tell a friction spike caused by a broken release from one caused by a traffic surge or a bad email campaign, it can't verify that your fixes worked, and it reads your code at whatever is on your default branch today instead of at the commit that was live when the friction happened.
 
-## Recording a deploy
+## If your repository is connected, this is already done
+
+Connect a repository under Settings, Sites and Flusterduck watches it. Nothing to install and nothing to run in CI.
+
+It reads two things, in this order:
+
+1. **GitHub Deployments.** Vercel, Netlify, Render, Fly and most deploy actions create one of these on every ship. A deployment whose latest status is `success`, in a production environment, is recorded as a deploy.
+2. **Your default branch moving.** Used when there are no GitHub Deployments to read. For the many teams whose `main` branch is what runs in production, this is the same answer.
+
+Which one produced a given record is stored on it, so you can always tell an observed deploy from an inferred one.
+
+A deployment that failed is not recorded. Neither is a preview environment. Nothing is recorded twice: if you also run the CLI or post to the API, the commit is matched and you get one deploy, not two.
+
+If your default branch is **not** what you ship, turn watching off on the source card in Settings, Sites and record deploys yourself with either method below. The repository stays connected for everything else.
+
+For the fastest path, subscribe the Flusterduck GitHub App to the `deployment_status` and `push` events and grant it `deployments: read`. Deploys then land within seconds instead of at the next hourly check.
+
+## Recording a deploy yourself
 
 ```bash
 curl -X POST https://api.flusterduck.com/v1/deploys \

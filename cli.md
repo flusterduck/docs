@@ -146,6 +146,8 @@ flusterduck status --key fd_pub_xxxxxxxxxxxx --wait
 
 Record a deploy so Flusterduck captures before/after confusion and verifies your fixes. Run it from CI after each production deploy. Commit hash, author, and PR number are auto-detected on GitHub Actions, Vercel, GitLab, and Bitbucket.
 
+If you have connected a repository, you do not need this: Flusterduck already watches it and records deploys on its own. See [deploy correlation](./deploy-correlation). Running both is harmless, they are matched by commit.
+
 ```bash
 flusterduck deploy notify --site <site_id>
 # or outside CI:
