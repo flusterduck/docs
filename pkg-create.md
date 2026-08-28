@@ -1,6 +1,6 @@
 # create-flusterduck
 
-The project scaffolder. It creates a new app preconfigured with Flusterduck so signals flow from the first run.
+The `npm create` entry point for the setup CLI. Run it inside an existing project and it detects your framework, then wires in the Flusterduck SDK for you. It's not a scaffolder: it doesn't generate a new directory, so don't pass a project name.
 
 ## Install
 
@@ -11,23 +11,19 @@ npm create flusterduck@latest
 You can also invoke it directly with your package manager of choice:
 
 ```bash
-npm create flusterduck@latest my-app
-pnpm create flusterduck my-app
-yarn create flusterduck my-app
+pnpm create flusterduck
+yarn create flusterduck
 ```
 
 ## Usage
 
-```bash
-# Scaffold into a new directory and answer the prompts.
-npm create flusterduck@latest my-app
+Run it from your project's root, with no arguments:
 
-cd my-app
-npm install
-npm run dev
+```bash
+npm create flusterduck@latest
 ```
 
-The scaffolder asks for your framework and publishable key, generates the project, and includes the matching Flusterduck wrapper already initialized.
+It detects your framework and package manager, asks how to connect (sign in with your browser, or paste a publishable key), and installs the matching wrapper package already initialized. Under the hood this runs `flusterduck-cli init`, so `npx flusterduck-cli init` does the same thing directly. See the [quickstart](./quickstart) for what happens next.
 
 ## Links
 

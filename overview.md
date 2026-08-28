@@ -41,12 +41,14 @@ The SDK's privacy constraints are enforced in code and policy. It cannot record 
 
 Paid product. No free tier. No open-source version.
 
-| Plan | Monthly | Sessions | Sites | Key features |
-|---|---|---|---|---|
-| Grow | $99 | Up to 50,000 | 1 | Core friction detection, issues, alerts, MCP access, 2 autofixes a month |
-| Scale | $249 | Up to 250,000 | 5 | Everything in Grow, plus team members, Slack integration, 10 autofixes a month |
-| Pro | $499 | Up to 1,000,000 | 10 | Everything in Scale, plus unlimited members, revenue estimates, priority support, 30 autofixes a month |
-| Enterprise | Custom | Custom | Unlimited | Custom volume, SSO, dedicated support, SLA |
+| Plan | Monthly | Sessions | Sites | Team | AI |
+|---|---|---|---|---|---|
+| Grow | $99 | Up to 50,000 | 1 | 3 members | AI diagnosis, 2 autofixes a month |
+| Scale | $249 | Up to 250,000 | 5 | 10 members | AI diagnosis, 10 autofixes a month |
+| Pro | $499 | Up to 1,000,000 | 10 | Unlimited | AI diagnosis, 30 autofixes a month |
+| Enterprise | Custom | Custom | Unlimited | Unlimited | AI diagnosis, unlimited autofixes |
+
+Every plan gets the full detection engine: all 132 friction signals, issues, alerts, integrations, and MCP access. The tiers differ on volume, sites, seats, and AI allowances, not on which detectors you're allowed to run.
 
 Session limits are pooled across all sites in the org, not per-site. Each organization gets one 3-day self-serve trial on Grow, Scale, or Pro. A card is required, you pay $0 today, and billing starts after 3 days unless you cancel. Enterprise terms are arranged separately.
 

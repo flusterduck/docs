@@ -26,10 +26,26 @@ curl -X POST https://api.flusterduck.com/v1/deploys \
   -H "Authorization: Bearer fd_sec_xxxxxxxxxxxx" \
   -H "Content-Type: application/json" \
   -d '{
-    "version": "v2.14.3",
+    "commit_hash": "a1b2c3d4e5f6",
     "environment": "production"
   }'
 ```
+
+There's no `version` field. Identify the deploy with `commit_hash` (what shows up as the pinned commit for code evidence) or, for a provider that doesn't give you a commit SHA, `external_deploy_id`. The full set of optional fields:
+
+| Field | Type | Notes |
+|---|---|---|
+| `environment` | string | Defaults to `production` if omitted |
+| `commit_hash` | string | The commit that's live. Used for code evidence and cross-provider dedup |
+| `external_deploy_id` | string | Your own deploy identifier, if you don't have a commit hash to hand |
+| `commit_message` | string | Shown alongside the deploy in the dashboard |
+| `author` | string | Who shipped it |
+| `pr_number` | string | Linked pull request, if any |
+| `provider` | string | One of `github`, `vercel`, `gitlab`, `bitbucket`, `custom`. Defaults to `custom` |
+| `metadata` | object | Free-form, stored as-is |
+| `deployed_at` | string | ISO timestamp. Defaults to now |
+
+A deploy is deduplicated within a site by `(provider, external_deploy_id)`, so retried webhook calls for the same deploy upsert instead of creating duplicates. Set `external_deploy_id` even when you also pass `commit_hash`; without it, every call with the same commit still creates a distinct row.
 
 The engine captures `confusion_before` at the moment of the call. After 5 or more minutes of post-deploy traffic, it calculates `confusion_after` and `delta`. Both fields are `null` until that data accumulates.
 
@@ -47,7 +63,7 @@ Run the record call after your deploy is live and serving traffic, not before. C
     curl -X POST https://api.flusterduck.com/v1/deploys \
       -H "Authorization: Bearer ${{ secrets.FLUSTERDUCK_SECRET_KEY }}" \
       -H "Content-Type: application/json" \
-      -d "{\"version\": \"${{ github.sha }}\", \"environment\": \"production\"}"
+      -d "{\"commit_hash\": \"${{ github.sha }}\", \"environment\": \"production\"}"
 ```
 
 Store your `fd_sec_` key in GitHub Secrets. Never put it in the workflow file itself.
@@ -66,28 +82,13 @@ export async function POST() {
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
-      version: process.env.VERCEL_GIT_COMMIT_SHA,
+      commit_hash: process.env.VERCEL_GIT_COMMIT_SHA,
       environment: 'production',
     }),
   })
   return new Response('ok')
 }
 ```
-
-### SDK-level version tagging
-
-If CI integration isn't available, set `segment.app_version` in your SDK config. The engine uses it to associate sessions with deploy records and improve correlation accuracy:
-
-```ts
-init({
-  key: process.env.NEXT_PUBLIC_FLUSTERDUCK_KEY!,
-  segment: {
-    app_version: process.env.NEXT_PUBLIC_APP_VERSION ?? 'unknown',
-  },
-})
-```
-
-Set `NEXT_PUBLIC_APP_VERSION` to your git SHA or version string at build time. This doesn't replace the API call for recording deploys, but it improves session-to-deploy correlation when version strings are consistent.
 
 ## What happens after a deploy is recorded
 
@@ -110,21 +111,23 @@ curl "https://api.flusterduck.com/v1/deploys" \
   "deploys": [
     {
       "id": "dep_xxxxxxxxxxxx",
-      "version": "v2.14.3",
+      "commit_hash": "a1b2c3d4e5f6",
       "environment": "production",
+      "provider": "github",
       "confusion_before": 41,
       "confusion_after": 67,
       "delta": 26,
-      "recorded_at": "2026-06-10T09:00:00Z"
+      "deployed_at": "2026-06-10T09:00:00Z"
     },
     {
       "id": "dep_xxxxxxxxxxxx",
-      "version": "v2.14.2",
+      "commit_hash": "f6e5d4c3b2a1",
       "environment": "production",
+      "provider": "github",
       "confusion_before": 45,
       "confusion_after": 41,
       "delta": -4,
-      "recorded_at": "2026-06-08T14:00:00Z"
+      "deployed_at": "2026-06-08T14:00:00Z"
     }
   ]
 }
@@ -179,14 +182,9 @@ curl -X POST https://api.flusterduck.com/v1/deploys \
   -H "Authorization: Bearer fd_sec_xxxxxxxxxxxx" \
   -H "Content-Type: application/json" \
   -d '{
-    "version": "v2.14.4-rc1",
+    "commit_hash": "b2c3d4e5f6a1",
     "environment": "staging"
   }'
 ```
 
-Filter deploys by environment when reading:
-
-```bash
-curl "https://api.flusterduck.com/v1/deploys?environment=production" \
-  -H "Authorization: Bearer fd_sec_xxxxxxxxxxxx"
-```
+Each deploy in the response carries its own `environment` field, so you can tell staging and production apart client-side. There's no server-side `environment` filter on `GET /v1/deploys`; use `limit` and `offset` (default 100, max 200 per page) to page through the full list and filter locally.

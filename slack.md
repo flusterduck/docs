@@ -109,13 +109,12 @@ If a rule has `slack` as a channel but no `slack_channel`, Flusterduck falls bac
 
 ## Bot permissions
 
-The Flusterduck Slack app requests three permissions:
+The Flusterduck Slack app asks for two OAuth scopes at install:
 
-- `chat:write`: post alert messages and slash command responses
-- `commands`: respond to `/flusterduck`
-- `reactions:write`: react to alert messages when their status changes (a checkmark when an alert is resolved)
+- `incoming-webhook`: post alerts to the one channel you pick during install
+- `chat:write`: post to any other channel you route a rule to, via `chat.postMessage`
 
-It doesn't read message history, access DMs, or join channels it hasn't been invited to.
+The `/flusterduck` slash command is wired to the app itself and verified with the signing secret, so it works without a broader scope. Its replies come back on the command's own response. The app doesn't read message history, access DMs, or join channels it hasn't been invited to.
 
 ## Disconnecting
 

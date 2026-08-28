@@ -4,102 +4,93 @@ Flusterduck can push events to your own server as they happen. Configure a webho
 
 ## Events
 
+Two events actually deliver today:
+
 | Event | Fires when |
 |---|---|
-| `issue.created` | A new UX issue is detected |
-| `issue.updated` | An issue's status changes (triaged, resolved, regressed, etc.) |
-| `issue.verified` | A fix is measured working after a deploy; carries the affected user refs for the [resolution loop](/resolution-loop) |
-| `alert.triggered` | An alert rule fires |
-| `alert.acknowledged` | An alert is acknowledged |
-| `alert.resolved` | An alert is resolved |
-| `score.spike` | A page confusion score increases sharply |
-| `deploy.recorded` | A deploy is recorded and scored |
+| `alert.fired` | An alert rule fires |
+| `issue.verified` | A deploy is measured to have fixed an issue. Carries the affected user refs for the [resolution loop](/resolution-loop) |
+
+A new endpoint subscribes to `alert.fired`, `issue.created`, and `issue.regressed` by default, but the pipeline only emits `alert.fired` and `issue.verified` right now. Subscribe to those two and you'll get everything that fires. Pass your own `events` array when you create the endpoint to narrow it.
 
 ## Payload shape
 
-Every webhook delivery is a POST request with a JSON body:
+Every delivery is a POST with a JSON body of exactly two fields:
 
 ```json
 {
-  "event": "issue.created",
-  "site_id": "7f2c9d4a-4b5e-4c3a-9b1d-2e6a4f8c7d5b",
-  "timestamp": "2026-06-10T14:22:05Z",
-  "data": { ... }
+  "event": "alert.fired",
+  "data": {}
 }
 ```
 
-The `data` object contains the full resource that changed. For `issue.created` it's the full issue object. For `alert.triggered` it's the full alert with the rule that fired it.
+`event` is the event name. `data` is the resource that changed. There's no wrapper envelope, and no top-level `site_id` or `timestamp`. The delivery id, event name, and timestamp all ride in headers (below), so read those for routing and replay checks, not the body.
 
-### issue.created
+### alert.fired
+
+`data` is the full alert row. `severity` is one of `warning`, `high`, `critical`. `status` starts at `fired`.
 
 ```json
 {
-  "event": "issue.created",
-  "site_id": "7f2c9d4a-4b5e-4c3a-9b1d-2e6a4f8c7d5b",
-  "timestamp": "2026-06-10T14:22:05Z",
+  "event": "alert.fired",
   "data": {
-    "id": "iss_3a7f2c9d4e1b",
-    "title": "Dead clicks on upgrade button",
-    "page": "/pricing",
-    "selector": "[data-cta='upgrade']",
-    "signal_type": "dead_click",
-    "signal_count": 47,
-    "severity": 72,
-    "status": "open",
+    "id": "9b5e1f4c-2d8a-4f3e-8b6d-7c1a5e9f2b4d",
+    "org_id": "7f2c9d4a-4b5e-4c3a-9b1d-2e6a4f8c7d5b",
+    "site_id": "1a2b3c4d-5e6f-4a3b-8c1d-9e2f4a6b8c0d",
+    "page": "/checkout",
+    "issue_id": null,
+    "rule_id": "4c8b2e7a-5f1d-42a9-9b3e-6d1c8a5f2e7b",
+    "trigger_type": "spike",
+    "severity": "high",
+    "status": "fired",
+    "score": 68,
+    "threshold": 25,
+    "message": "Checkout confusion spiked to 68",
+    "channels": ["email", "webhook"],
     "created_at": "2026-06-10T14:22:05Z"
   }
 }
 ```
 
-### alert.triggered
+### issue.verified
+
+`data` is the verification receipt, including the opaque affected-user refs for the [resolution loop](/resolution-loop). Confusion scores run 0 to 100.
 
 ```json
 {
-  "event": "alert.triggered",
-  "site_id": "7f2c9d4a-4b5e-4c3a-9b1d-2e6a4f8c7d5b",
-  "timestamp": "2026-06-10T14:22:05Z",
+  "event": "issue.verified",
   "data": {
-    "id": "alt_9b5e1f4c2d8a",
-    "rule_id": "rul_4c8b2e7a5f1d",
-    "rule_name": "Checkout rage click spike",
-    "page": "/checkout",
-    "trigger_type": "spike",
-    "score_before": 31,
-    "score_after": 68,
-    "status": "open",
-    "triggered_at": "2026-06-10T14:22:05Z"
-  }
-}
-```
-
-### deploy.recorded
-
-```json
-{
-  "event": "deploy.recorded",
-  "site_id": "7f2c9d4a-4b5e-4c3a-9b1d-2e6a4f8c7d5b",
-  "timestamp": "2026-06-10T14:22:05Z",
-  "data": {
-    "id": "dep_6e3d1a8f7c2b",
-    "version": "2026.06.10",
-    "environment": "production",
+    "issue_id": "3a7f2c9d-4e1b-42d8-9c5a-1f6b8e2d4a7c",
+    "title": "Dead clicks on upgrade button",
+    "page": "/pricing",
     "confusion_before": 42,
     "confusion_after": 31,
-    "recorded_at": "2026-06-10T14:22:05Z"
+    "reduction_pct": 26,
+    "revenue_recovered_cents": 48000,
+    "affected_user_refs": ["u_8a3f2c", "u_1c9d4e"],
+    "identified_sessions": 74,
+    "unidentified_sessions": 12,
+    "refs_truncated": false
   }
 }
 ```
+
+## Headers
+
+Every delivery carries these headers:
+
+```
+X-Flusterduck-Event: alert.fired
+X-Flusterduck-Delivery: 8a3f2c9d-4e1b-42d8-9c5a-1f6b8e2d4a7c
+X-Flusterduck-Timestamp: 1749565325
+X-Flusterduck-Signature: 4f3e8b6d7c1a5e9f2b4d9b5e1f4c2d8a4f3e8b6d7c1a5e9f2b4d9b5e1f4c2d8a
+```
+
+`X-Flusterduck-Event` is the event name. `X-Flusterduck-Delivery` is a stable id for this delivery: it stays the same across retries, so dedup on it if you ever process the same delivery twice. `X-Flusterduck-Timestamp` is Unix seconds.
 
 ## Signature verification
 
-Every webhook delivery includes two headers:
-
-```
-X-Flusterduck-Signature: sha256=<hex>
-X-Flusterduck-Timestamp: <unix timestamp seconds>
-```
-
-The signature is HMAC-SHA256 over `timestamp.raw_body` using your webhook secret. Verify it on your server before trusting the payload.
+`X-Flusterduck-Signature` is HMAC-SHA256, hex-encoded, over the string `<timestamp>.<raw_body>` using your endpoint secret (it starts with `whsec_fd`). There's no `sha256=` prefix. It's the bare hex digest. Compare against the raw hex, and verify before trusting the payload.
 
 ### Node.js (Express)
 
@@ -126,16 +117,16 @@ app.post('/webhooks/flusterduck', express.raw({ type: 'application/json' }), (re
 function verifySignature(body: Buffer, timestamp: string, signature: string): boolean {
   const secret = process.env.FLUSTERDUCK_WEBHOOK_SECRET!
   const payload = `${timestamp}.${body.toString()}`
-  const expected = 'sha256=' + crypto
+  const expected = crypto
     .createHmac('sha256', secret)
     .update(payload)
     .digest('hex')
 
-  // Constant-time comparison prevents timing attacks
-  return crypto.timingSafeEqual(
-    Buffer.from(signature),
-    Buffer.from(expected)
-  )
+  const expectedBuf = Buffer.from(expected)
+  const signatureBuf = Buffer.from(signature)
+  // Length check first: timingSafeEqual throws on a length mismatch.
+  if (expectedBuf.length !== signatureBuf.length) return false
+  return crypto.timingSafeEqual(signatureBuf, expectedBuf)
 }
 ```
 
@@ -153,15 +144,15 @@ export async function POST(req: NextRequest) {
 
   const secret = process.env.FLUSTERDUCK_WEBHOOK_SECRET!
   const payload = `${timestamp}.${body}`
-  const expected = 'sha256=' + crypto
+  const expected = crypto
     .createHmac('sha256', secret)
     .update(payload)
     .digest('hex')
 
-  const valid = crypto.timingSafeEqual(
-    Buffer.from(signature),
-    Buffer.from(expected)
-  )
+  const expectedBuf = Buffer.from(expected)
+  const signatureBuf = Buffer.from(signature)
+  const valid = expectedBuf.length === signatureBuf.length
+    && crypto.timingSafeEqual(signatureBuf, expectedBuf)
 
   if (!valid) {
     return NextResponse.json({ error: 'Invalid signature' }, { status: 401 })
@@ -188,22 +179,24 @@ if (age > fiveMinutes) {
 
 ## Retry behavior
 
-Failed deliveries (non-2xx response or timeout) are retried up to 5 times with exponential backoff:
+A delivery that gets a non-2xx response, a timeout, or a redirect is retried. Up to 10 attempts total, then it's marked dead. The delay after a failed attempt doubles each time, capped at 1 hour:
 
-| Attempt | Delay |
+| After attempt | Next retry in |
 |---|---|
-| 1 | Immediate |
-| 2 | 1 minute |
-| 3 | 5 minutes |
-| 4 | 30 minutes |
-| 5 | 2 hours |
+| 1 | ~1 minute |
+| 2 | ~2 minutes |
+| 3 | ~4 minutes |
+| 4 | ~8 minutes |
+| 5 | ~16 minutes |
+| 6 | ~32 minutes |
+| 7 and up | 1 hour (the cap) |
 
-After 5 failures the delivery is marked failed and won't be retried automatically. View failed deliveries and retry them manually under Settings > Integrations > Webhooks > Delivery History.
+Retries reuse the same `X-Flusterduck-Delivery` id, so if a slow 2xx makes us retry a delivery you already processed, dedup on that id. Once a delivery is dead, view it and retry it by hand under Settings > Integrations > Webhooks > Delivery History.
 
-Deliveries are deduplicated: the same event won't be delivered twice to the same endpoint within a 10-minute window, even across retries.
+We never follow redirects. A 3xx from your endpoint is treated as a failed attempt, not a hop to chase. Respond directly with a 2xx.
 
 ## Testing
 
-Send a test event from the dashboard to verify your endpoint before going live. It uses the same signature mechanism as live events.
+Send a test event from the dashboard to verify your endpoint before going live. It arrives as `test.ping` and is signed the same way as live events.
 
-Your endpoint must return a 2xx status within 10 seconds. Longer than that counts as a timeout and is treated as a failure.
+Your endpoint has 8 seconds to respond with a 2xx. Slower than that is a timeout and counts as a failed attempt.

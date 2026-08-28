@@ -39,11 +39,15 @@ VITE_FLUSTERDUCK_KEY=fd_pub_xxxxxxxxxxxx
 | `sampleRate` | `number` | `1.0` | `0.25` tracks one in four sessions. |
 | `domMode` | `'off' \| 'metadata' \| 'snapshot'` | `'off'` | `'metadata'` captures element attributes. `'snapshot'` adds layout and computed styles. |
 | `cookieless` | `boolean` | `false` | Memory-only session IDs instead of cookies. |
-| `respectDoNotTrack` | `boolean` | `false` | Honor `navigator.doNotTrack`. |
+| `respectDoNotTrack` | `boolean` | `true` | Honor `navigator.doNotTrack`. Most teams pass `false`: Flusterduck captures no PII, and the default silently drops 30-50% of visitors on Firefox, Brave, and other privacy-focused browsers. |
 | `ignoreElements` | `string[]` | `[]` | CSS selectors to suppress signals on. |
 | `ignorePages` | `string[]` | `[]` | Page paths to skip. |
 | `segment` | `Record<string, string>` | - | Static tags on every event. |
 | `debug` | `boolean` | `false` | Verbose console logging. |
+| `batchInterval` | `number` | - | Milliseconds between flushes. Default flushes on idle and before unload. |
+| `elementImpressionSelectors` | `string[]` | - | CSS selectors to emit an impression signal when they enter the viewport. |
+
+`app.use(FlusterduckPlugin, options)` passes `options` straight through to `init()`, so any option from the core SDK `Config` type works, not just the ones listed above. See [SDK Reference](./sdk) for the full set.
 
 ## useFlusterduck composable
 
@@ -211,12 +215,13 @@ app.use(FlusterduckPlugin, {
 
 ## TypeScript
 
-```ts
-import type { SignalData } from 'flusterduck'
+There's no exported `SignalData` type, `signal()`'s second argument is an inline shape. Pass the object literal directly and TypeScript checks it structurally:
 
-const data: SignalData = {
+```ts
+import { signal } from 'flusterduck'
+
+signal('interaction_error', {
   element: '[data-testid="submit-payment"]',
   metadata: { error_code: 'card_declined', attempt: 2 },
-}
-signal('interaction_error', data)
+})
 ```

@@ -43,12 +43,16 @@ Note `apiKey`, not `key`. React reserves the `key` prop for reconciliation. It g
 | `sampleRate` | `number` | `1.0` | `0.1` tracks 10% of sessions. Useful for high-traffic apps where full coverage is expensive. |
 | `domMode` | `'off' \| 'metadata' \| 'snapshot'` | `'off'` | `'metadata'` captures element attributes with each signal. `'snapshot'` adds computed layout and styles. |
 | `cookieless` | `boolean` | `false` | Memory-only session IDs instead of cookies. |
-| `respectDoNotTrack` | `boolean` | `false` | Honor `navigator.doNotTrack`. |
+| `respectDoNotTrack` | `boolean` | `true` | Honor `navigator.doNotTrack`. Most teams pass `false`: Flusterduck captures no PII, and the default silently drops 30-50% of visitors on Firefox, Brave, and other privacy-focused browsers. |
 | `ignoreElements` | `string[]` | `[]` | CSS selectors to suppress signals on. Good for admin toolbars or debug overlays. |
 | `ignorePages` | `string[]` | `[]` | Page paths to skip entirely. |
 | `segment` | `Record<string, string>` | - | Static tags on every event: app version, experiment variant, user cohort. |
 | `debug` | `boolean` | `false` | Logs every signal and flush to the console. |
+| `batchInterval` | `number` | - | Milliseconds between flushes. Default flushes on idle and before unload. |
+| `elementImpressionSelectors` | `string[]` | - | CSS selectors to emit an impression signal when they enter the viewport. |
 | `enabled` | `boolean` | `true` | `false` skips initialization. Flip to `true` and it initializes then. |
+
+`FlusterduckProvider` accepts anything from the core SDK `Config` type, not just the props listed above. It spreads everything but `apiKey` straight into `init()`. See [SDK Reference](./sdk) for the full option set, including `guide`, `onSignal`, `transport`, and per-signal tuning.
 
 ## useFlusterduck hook
 
@@ -67,7 +71,7 @@ export function App() {
 }
 ```
 
-Options are identical to `FlusterduckProvider` props, but uses `key` instead of `apiKey` (no JSX involved, no prop stripping).
+Options are identical to `FlusterduckProvider` props, but this one uses `key` instead of `apiKey` (no JSX involved, no prop stripping).
 
 ### Return value
 
@@ -128,7 +132,7 @@ export function Root() {
 }
 ```
 
-`enabled: false` skips initialization entirely. No session, no buffering, nothing recorded. `setConsent(false)` initializes but pauses collection. Pseudonymous, unidentified session data accumulates until consent flips. Use `enabled: false` if your legal requirement is zero data before consent. Use `setConsent(false)` if pre-consent analytics are acceptable and you want to resume without a full re-init.
+`enabled: false` skips initialization entirely: the SDK module is never even imported, so nothing runs, no cookie is set, no detector attaches, until you flip it to `true`. `setConsent(false)` is a different mechanism and only does something useful once the SDK has already started: it flushes anything already buffered in memory, sends it, tears the SDK down, and clears the session cookie. It's not a pause that holds data waiting for consent, and calling it before the SDK ever initialized (nothing to flush, no session to clear) is a harmless no-op. If your legal requirement is zero data before consent, use `enabled: false`, not `setConsent(false)` after the fact.
 
 ## Consent flow
 
@@ -146,7 +150,7 @@ export function ConsentBanner({ onDecide }: { onDecide: (accepted: boolean) => v
 }
 ```
 
-`setConsent(false)` pauses immediately. `setConsent(true)` resumes. The consent state doesn't persist across reloads. The SDK initializes fresh each session, so you'll re-apply it on mount from whatever storage you use.
+If this banner sits inside an already-mounted `FlusterduckProvider`, the SDK is likely running by the time someone clicks Decline, so `setConsent(false)` sends whatever was captured between mount and that click before tearing down. `setConsent(true)` doesn't resume a paused session: it calls `init()` again with the last config the provider passed in, starting a new one. Consent state itself doesn't persist across reloads, you'll re-apply it on mount from whatever storage you use.
 
 ## Identifying users
 
@@ -193,12 +197,13 @@ StrictMode double-invokes effects in development to surface side effects. The `u
 
 ## TypeScript
 
-```ts
-import type { SignalData } from 'flusterduck'
+The package ships types, but there's no exported `SignalData` type to import, `signal()`'s second argument is an inline shape. Just pass the object literal and let TypeScript check it structurally:
 
-const data: SignalData = {
+```ts
+import { signal } from 'flusterduck'
+
+signal('form_error', {
   element: '[data-role="submit"]',
   metadata: { validation_errors: ['email_invalid', 'name_required'] },
-}
-signal('form_error', data)
+})
 ```

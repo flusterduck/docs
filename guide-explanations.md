@@ -1,6 +1,6 @@
 # How Guide explanations work
 
-Guide generates plain-language explanations for UI elements on the fly. When a user hovers over something in Guide mode, the SDK captures the element's identity, sends it to the explanation engine, and renders the response in a card near the cursor. Most of this happens in under 200ms because of aggressive caching.
+Guide generates plain-language explanations for UI elements on the fly. When a user hovers over something in Guide mode, the SDK captures the element's identity, sends it to the explanation engine, and renders the response in a card near the cursor. Most hovers hit a cache and render instantly; only a cold element waits on the model.
 
 ## What the engine sees
 
@@ -33,51 +33,47 @@ A map in the SDK's JavaScript. Instant. Holds the last 500 explanations the user
 
 ### Layer 2: Local storage (client-side, persistent)
 
-Explanations persist in the browser's IndexedDB across sessions. When a returning user hovers over an element they saw last week, the explanation loads from local storage with no network request. Entries expire after 7 days or when a deploy invalidates them.
+Explanations persist in the browser's IndexedDB across sessions. When a returning user hovers over an element they saw last week, the explanation loads locally with no network request. Entries expire after 7 days.
 
 ### Layer 3: Edge cache (server-side, shared)
 
-Explanations are cached at the edge, keyed by site + page + element fingerprint. When user A hovers over the "Submit" button and gets an explanation, user B hovering the same button on the same page hits the edge cache. No new AI call.
+Explanations are cached server-side for 7 days, keyed by site, page, and element (the key is derived on the server from the sanitized selector, so a client can't poison another element's entry). When user A hovers over the "Submit" button and gets an explanation, user B hovering the same button on the same page hits this shared cache. No new AI call.
 
-After a handful of users explore a page, every element on it is cached. Expected edge hit rate after warm-up: 90-95%. The AI model only fires for new elements it hasn't seen before or freshly deployed pages.
+After a handful of users explore a page, most of its elements are cached and the model only fires for elements it hasn't seen before.
 
 ### Invalidation
 
-Caches invalidate on two triggers:
-
-- **Deploy.** If you use Flusterduck's deploy correlation, explanations for the affected site are cleared automatically. The first user after a deploy re-primes the cache.
-- **TTL.** Explanations expire after 7 days regardless of deploys. This catches sites that don't use deploy correlation.
+Every layer works the same way: entries expire 7 days after they were written. There's no manual purge and no deploy-triggered invalidation; if you ship a change to an element, its old explanation can survive for up to a week until the TTL rolls it over.
 
 The `data-fd-guide` attribute bypasses all caching. Its content is always used verbatim.
 
 ## Prefetching
 
-On page load, the SDK scans the visible viewport for interactive elements, batches their fingerprints, and requests cached explanations in a single call. This pre-warms the in-memory cache so the first hover on any visible element is instant. Users do not have to wait for a second hover.
+A couple of seconds after page load, during browser idle time, the SDK collects up to 20 visible interactive elements (skipping anything under `data-fd-guide-ignore` and anything carrying its own `data-fd-guide` text) and requests an explanation for each one it doesn't already have locally. That pre-warms the cache so the first hover on a visible element is instant.
 
-Prefetching only requests elements that already have cached explanations on the edge. It doesn't trigger AI generation. The cost is one lightweight network request per page load.
+Prefetch requests go through the same endpoint as a live hover. On a warm page they're all server cache hits. On a page the server hasn't seen, they generate, which uses your Guide allowance; that's the tradeoff for instant first hovers. In feedback-only mode the SDK skips prefetching entirely, since no explanations are ever shown.
 
 ## Guide allowance
 
-Guide uses a fast model for generation. Each explanation is roughly 300 input tokens (element context + friction data) and 100-150 output tokens (the explanation itself).
+Guide uses a fast model for generation, and each explanation is a couple of sentences, so a single generation is cheap. The allowance exists so a crawler or a hostile client can't run up your bill.
 
-The three-day trial includes a fixed Guide allowance for the lifetime of the trial. It does not reset when the calendar month changes. Paid plans include a monthly Guide allowance that scales with the plan tier.
+The three-day trial includes a fixed Guide allowance for the lifetime of the trial. It does not reset when the month changes. Paid plans include a monthly Guide allowance that scales with the plan tier.
 
 When the allowance is used, cached explanations still work, but new AI generations pause. During a trial, Billing offers **Start my plan now**. On a paid plan, generation resumes at the start of the next month or after a plan upgrade. There is no add-on capacity to buy.
 
 ### What uses the allowance
 
-Only live AI generations use the allowance. Cache hits at any layer (in-memory, local storage, edge) do not. `data-fd-guide` attribute explanations and prefetch requests also do not use it.
+Only live AI generations use the allowance. Cache hits at any layer (in-memory, IndexedDB, server) do not, and `data-fd-guide` attribute explanations never touch the network at all. Prefetch uses the allowance only when it hits an element the server hasn't generated yet.
 
-In practice, the cache handles 90%+ of hovers after the first few sessions on each page. The allowance covers cold starts and the long tail of rarely visited elements.
+In practice, the cache absorbs most hovers after the first few sessions on each page. The allowance covers cold starts and the long tail of rarely visited elements.
 
 ## Monitoring usage
 
-The dashboard shows Guide usage alongside your other Flusterduck metrics:
+The Guide page in your dashboard shows what your users are asking about:
 
-- Total hovers this trial or month
-- Cache hit rate (broken down by layer)
-- AI generations used vs. allowance remaining
-- Top elements by hover count (which elements users ask about most)
-- Friction reduction on Guide-explained elements vs. unexplained ones
+- Explanations shown, elements explained, and confusion reports received
+- The elements users ask about most. High counts on one element are confusion evidence in their own right
+- Confusion reports with triage controls (new, reviewed, dismissed)
+- Pages where Guide was active and the underlying issue has since been fixed, so you can see the loop close
 
-The last metric is the one that matters. It closes the loop: Flusterduck detected friction, Guide explained it, and the verification engine confirms whether confusion dropped.
+Allowance status and generation counts live on Settings → Usage.

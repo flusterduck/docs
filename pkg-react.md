@@ -25,11 +25,11 @@ export function Root() {
 ```
 
 ```tsx
-// Any component.
-import { useFlusterduck } from '@flusterduck/react'
+// Any other component. Track directly from the core package: the provider
+// above already initialized it, and it's the same running instance.
+import { track } from 'flusterduck'
 
 export function CheckoutButton() {
-  const { track } = useFlusterduck()
   return (
     <button onClick={() => track('checkout_completed', { value: 49 })}>
       Pay
@@ -37,6 +37,8 @@ export function CheckoutButton() {
   )
 }
 ```
+
+`useFlusterduck` itself takes the same config as `FlusterduckProvider` and returns `{ signal, track, identify, setConsent, optOut }`; call it again with the same key in a deeper component if you'd rather not import from `flusterduck` directly. See the [React guide](./react) for the full option list.
 
 ## Links
 

@@ -1,44 +1,38 @@
 # Revenue Impact
 
-Wire conversion events with `track()` and Flusterduck starts putting dollar amounts on UX issues. Instead of "47 users are rage-clicking the checkout button," you get "47 users are rage-clicking the checkout button and we estimate $5,200/month in lost revenue from sessions with that pattern."
+Confusion scores tell you a page is broken. Revenue impact tells you what it's costing. Flusterduck gives you two separate ways to see that, and they answer different questions.
 
-That's the number that gets engineers to prioritize UX bugs over feature work.
+**Per-issue estimates** turn "47 users are rage-clicking the complete purchase button" into "and it's costing about $2,400-$3,800/mo." Every issue carries one, driven by published conversion-impact research for that signal type, sharpened by your own numbers if you provide them.
+
+**Revenue opportunities** look for a more direct kind of leak: sessions where a visitor showed intent to pay one amount and ended up paying less, or nothing. This is the `/v1/revenue` endpoint, and it's a session-level accounting, not a friction-pattern estimate.
+
+Both read from the same `track()` events. Wire them once.
 
 ## What to track
-
-Three events power revenue estimates:
 
 ```ts
 import { track } from 'flusterduck'
 
-// User selects a plan or clicks an upgrade CTA
+// User clicks a pricing CTA, selects a plan tier, or adds to cart.
+// Before the payment form.
 track('plan_intent', {
   plan_id: 'scale',
   amount_cents: 9900,
   billing: 'monthly',
 })
 
-// Purchase completed
+// Purchase or subscription completed. In your post-payment success
+// handler or your payment provider's webhook.
 track('subscription_started', {
   plan_id: 'scale',
   amount_cents: 9900,
   billing: 'monthly',
 })
-
-// Checkout started but not completed
-track('checkout_abandoned', {
-  plan_id: 'grow',
-  amount_cents: 3900,
-})
 ```
 
-Where each one belongs in your code:
+`plan_intent` is the signal that a visitor was headed toward a specific dollar amount. `subscription_started` (or `purchase_completed` for a one-time sale, or `checkout_completed` for an order) is the signal that they landed, and at what amount. Fire the realized event even when the amount matches what was intended: revenue opportunities only exist as a *comparison*, so a realized-only session or an intent-only session doesn't produce one on its own.
 
-**`plan_intent`**: when a user clicks a pricing CTA or selects a plan tier. Before the payment form. This tells the engine what was at stake in sessions that didn't convert.
-
-**`subscription_started`**: in your post-payment success handler or your Stripe webhook. This establishes the baseline conversion rate.
-
-**`checkout_abandoned`**: when a user leaves the checkout flow. Use your payment provider's abandon detection or wire it to `onbeforeunload` on your checkout page.
+If you have both a hover-level and click-level intent, `plan_hover`, `plan_selected`, and `cart_added` are also recognized as intent events, so you don't have to collapse everything into `plan_intent`.
 
 ## Safe properties
 
@@ -53,18 +47,45 @@ Never pass PII, form values, or any user-typed content. The engine only needs th
 | `quantity` | number | Seat count, unit count |
 | `product_id` | string | For multi-product apps |
 
-## How the estimate works
+## Per-issue estimates
 
-The engine correlates friction patterns with conversion outcomes:
+Every open issue carries a `revenue_impact` object, visible via `GET /v1/issues` and `GET /v1/issues/:id`. It works even if you never call `track()`, because it starts from a published research benchmark rather than your own conversion data.
 
-1. For each open issue, it identifies the sessions containing that friction pattern.
-2. It compares the conversion rate of those sessions against sessions on the same page with no friction signals.
-3. The conversion gap gets monetized using the average `amount_cents` from recent `subscription_started` events.
-4. That's projected across the monthly session volume for that page.
+For the issue's dominant signal type, the engine looks up a conversion-drop range (a `rage_click` on a critical element is benchmarked at 18-28%, `form_abandonment` at 25-40%, and so on down to ambient signals in the 4-10% range), then applies that range to the percentage of sessions on the page the issue actually affected:
 
-The result is directionally accurate, not exact. It assumes the friction is causing the conversion gap, which is usually right but not always. A page that's down or slow will produce high friction signals and low conversions, but the fix isn't a UX change. Use the revenue estimate as a prioritization signal, not a forecast.
+```json
+{
+  "id": "iss_xxxxxxxxxxxx",
+  "title": "Dead clicks on complete purchase button",
+  "page": "/checkout",
+  "signal_count": 47,
+  "revenue_impact": {
+    "low_cents": 0,
+    "high_cents": 0,
+    "affected_pct": 14.2,
+    "method": "benchmark",
+    "label": "Affects 14% of sessions. Industry data suggests 12-20% conversion impact."
+  }
+}
+```
 
-## Reading revenue estimates
+`method: "benchmark"` with `low_cents`/`high_cents` at zero means no dollar figure yet: you haven't told Flusterduck what your revenue actually is. Set one of these under Settings > Revenue (or `PATCH /v1/manage/sdk-config` with a `revenue_config` object) and the same issue gets a real number:
+
+| Field | Type | What it does |
+|---|---|---|
+| `monthly_revenue_cents` | integer | Total monthly revenue for the site. The most accurate input: the benchmark rate is applied directly to your real revenue times the affected share |
+| `avg_order_value_cents` | integer | Per-session value, if you'd rather not share total revenue. Combined with `baseline_conversion_pct` |
+| `baseline_conversion_pct` | number, 0-100 | Your normal conversion rate. Without it, every affected session is priced as though it would have converted, which overstates impact by roughly the inverse of your real conversion rate |
+| `cac_cents` | integer | Cost to acquire a customer. Prices friction earlier in the funnel, before a cart exists, as a floor on what a lost visitor cost you |
+| `conversion_goal` | string | Shared with the [conversion trigger](./conversion-trigger); not used by revenue estimates |
+
+With `monthly_revenue_cents` set, the same issue reads `"method": "configured"` and `low_cents`/`high_cents` carry real numbers.
+
+Use the range as a prioritization signal, not a forecast. It assumes the benchmarked signal type is actually suppressing conversion on your specific page, which is usually a safe assumption but not a guaranteed one.
+
+## Revenue opportunities
+
+`GET /v1/revenue` looks for something more concrete than a benchmark: sessions where a visitor's intent and their outcome don't match.
 
 ```bash
 curl "https://api.flusterduck.com/v1/revenue" \
@@ -73,37 +94,34 @@ curl "https://api.flusterduck.com/v1/revenue" \
 
 ```json
 {
-  "total_at_risk_monthly": 8400,
-  "currency": "USD",
-  "issues": [
+  "site_id": "site_xxxxxxxxxxxx",
+  "currency": "usd",
+  "total_monthly_recurring_loss_cents": 8400,
+  "total_one_time_loss_cents": 0,
+  "sessions_with_revenue_leak": 3,
+  "opportunities": [
     {
-      "issue_id": "iss_xxxxxxxxxxxx",
-      "title": "Dead clicks on complete purchase button",
-      "page": "/checkout",
-      "revenue_at_risk_monthly": 5200,
-      "affected_sessions_pct": 14,
-      "conversion_gap_pct": 8.3
-    },
-    {
-      "issue_id": "iss_xxxxxxxxxxxx",
-      "title": "Form abandonment at billing step",
-      "page": "/checkout",
-      "revenue_at_risk_monthly": 3200,
-      "affected_sessions_pct": 9,
-      "conversion_gap_pct": 5.1
+      "session_id": "ses_xxxxxxxxxxxx",
+      "intended_plan_id": "scale",
+      "realized_plan_id": "grow",
+      "intended_amount_cents": 9900,
+      "realized_amount_cents": 3900,
+      "monthly_recurring_loss_cents": 6000,
+      "one_time_loss_cents": 0,
+      "revenue_model": "subscription",
+      "heuristic": "value_collapse_downgrade",
+      "first_seen_at": "2026-06-10T09:02:00Z",
+      "realized_at": "2026-06-10T09:14:00Z"
     }
-  ]
+  ],
+  "reason": null,
+  "message": "Revenue impact is estimated from explicit plan intent and checkout telemetry."
 }
 ```
 
-`affected_sessions_pct` is the percentage of checkout sessions that contain this friction pattern. `conversion_gap_pct` is the difference in conversion rate between affected and unaffected sessions.
+Each entry in `opportunities` is one session that intended a plan or amount and realized a lower one, or bought nothing at all. Subscription amounts are normalized to a common monthly cadence before comparing, so an annual intent against a monthly purchase is compared correctly rather than as raw totals. `heuristic` tells you which pattern the session matched: `value_collapse_downgrade` (settled for less without much visible struggle) or `layout_exhaustion_settling` (three or more friction signals before settling, meaning the friction plausibly caused the downgrade rather than an ordinary price-sensitive choice).
 
-Revenue estimates are only populated when:
-- You've called `track('subscription_started', ...)` at least 50 times in the past 30 days (the engine needs enough data to establish a baseline conversion rate)
-- There are open issues on pages where conversion events were tracked
-- The issue's affected sessions have a statistically meaningful conversion gap
-
-If the `/revenue` endpoint returns empty `issues`, you either haven't tracked enough conversions yet or there aren't enough sessions to compute a meaningful gap.
+If `opportunities` comes back empty, `reason` is `"insufficient_data"`: you either haven't fired both an intent and a realized event in the same session, or every session that has both realized the full intended amount (which is a good sign, not a data problem).
 
 ## Revenue via MCP
 
@@ -111,22 +129,23 @@ If the `/revenue` endpoint returns empty `issues`, you either haven't tracked en
 What's the revenue impact of the current open issues?
 Which issue is costing us the most?
 Rank the open issues by revenue at risk.
+Are there sessions where someone intended a bigger plan and downgraded?
 ```
 
-The `get_revenue_impact` tool returns the same data as the API endpoint, formatted for your AI assistant to reason about.
+The `get_revenue_impact` tool returns the same opportunities data as `GET /v1/revenue`, formatted for your AI assistant to reason about.
 
 ## Annual vs monthly
 
-The estimate uses `billing` to annualize correctly. If most of your conversions are annual, the per-session value is higher and the revenue-at-risk number will reflect that. Pass `billing: "annual"` in `subscription_started` events for annual subscribers and `billing: "monthly"` for monthly subscribers.
+Both features use `billing` to normalize to a common monthly cadence. Pass `billing: "annual"` for annual subscribers and `billing: "monthly"` for monthly ones. If you don't pass `billing`, the engine assumes monthly.
 
-If you don't pass `billing`, the engine assumes monthly.
+## When numbers look off
 
-## When estimates look too low or too high
+**Per-issue estimate stuck at zero with `method: "benchmark"`**: you haven't set `monthly_revenue_cents` or `avg_order_value_cents` under Settings > Revenue. The affected-percentage and the benchmark range are still shown; only the dollar figure is missing.
 
-**Too low**: You may not be calling `track('checkout_abandoned', ...)`. Without explicit abandonment events, the engine has to infer them from sessions that had `plan_intent` but no `subscription_started`. That inference is less precise than an explicit event.
+**No revenue opportunities showing up**: check that you're firing both a `plan_intent`-family event and a realized event (`checkout_completed`, `purchase_completed`, or `subscription_started`) in the *same* session, even when the amounts match. A session with only one side of the pair never becomes an opportunity.
 
-**Too high**: Check whether your `subscription_started` events are firing in test or CI sessions. If they are, the engine's baseline conversion rate will be inflated and the gap will appear larger than it is. Pass `environment: "development"` to your SDK init in non-production environments to keep test data out of production scores.
+**Per-issue estimate looks too high**: check whether `subscription_started` or other realized events are firing from test or CI sessions. If they are, the estimate can be built on inflated volume. Pass `environment: "development"` to your SDK init in non-production environments to keep test data out of production numbers.
 
 ## See also
 
-The same conversion events power the [Conversion trigger](./conversion-trigger): the confused-vs-calm analysis that shows, site-wide, how much less confused sessions convert than calm ones. Revenue impact dollarizes individual issues; the conversion trigger proves confusion is costing conversions and pinpoints where. Wire the event once and both get sharper.
+The same `track()` events power the [conversion trigger](./conversion-trigger): the confused-vs-calm analysis that shows, site-wide, how much less confused sessions convert than calm ones. Revenue impact prices individual issues and finds session-level leaks; the conversion trigger proves confusion is costing conversions in aggregate and pinpoints where. Wire the events once and all three get sharper.

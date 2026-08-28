@@ -18,7 +18,7 @@ This matters because position within an element tells you things the signal type
 
 The SDK records click position as a 0-to-1 fraction relative to the element's bounding box. For rage clicks, the SDK computes the centroid of the click burst (the average x/y of all clicks in that burst) and normalizes it against the element's width and height. For dead clicks and disabled element attempts, it's the single click position.
 
-The raw values emitted are `hx` and `hy`, integers from 0 to 1000 (where 500,500 is the center). The API normalizes these to `rx` and `ry` floats from 0 to 1 before returning them.
+The raw values emitted are `hx` and `hy`, integers between 0 and 1000 (where 500,500 is the center). The API normalizes these to `rx` and `ry` floats between 0 and 1 before returning them.
 
 No pixel coordinates leave the browser. The SDK only stores the relative position within the element, so there's nothing to reconstruct about viewport size, screen resolution, or device type from this data.
 
@@ -81,15 +81,21 @@ The page heatmap zooms out to the full viewport. Instead of showing clicks on on
 
 This is the view that answers "which region of my page is generating the most confusion?" It's particularly useful for pages with complex layouts where multiple elements compete for attention.
 
+The page heatmap looks at signals from the last 30 days, so very old friction won't appear even if the underlying issue is still open.
+
 ### How viewport positions work
 
-The SDK captures viewport-relative coordinates alongside every click-based signal. When a rage click fires, the SDK records `vx` and `vy` as integers from 0 to 1000, where (0,0) is the top-left corner of the visible viewport and (1000,1000) is the bottom-right. The API normalizes these to 0-to-1 floats before returning.
+The SDK captures viewport-relative coordinates alongside every click-based signal. When a rage click fires, the SDK records `vx` and `vy` as integers between 0 and 1000, where (0,0) is the top-left corner of the visible viewport and (1000,1000) is the bottom-right. The API normalizes these to 0-to-1 floats before returning.
 
 These coordinates represent where the click happened relative to the browser viewport at that moment, not relative to the document. A click at the very bottom of a long scrolled page still maps to the viewport position the user saw. This means the heatmap reflects the user's visual experience, not the document's scroll position.
 
+Newer SDK builds also record `px`/`py`, the same click position in document-space (0-1) instead of viewport-space. Rows from older SDK versions won't carry it. Use `px`/`py` instead of `vx`/`vy` when overlaying points on a full-page screenshot instead of a single viewport-height frame.
+
+Pass `device=desktop` or `device=mobile` to restrict the heatmap to sessions from that device class (`mobile` includes tablets). Useful when a page has meaningfully different layouts, so mobile taps don't get overlaid on a desktop screenshot backdrop.
+
 ### Reading the panel
 
-The page heatmap panel appears on every issue detail page. It renders a viewport-shaped box with a subtle grid overlay, dots colored by signal type (same red/orange/purple scheme as the element heatmap), and crosshairs marking the center.
+The page heatmap panel appears on every issue detail page. It renders a viewport-shaped box with a subtle grid overlay, dots colored by signal type (rage click, dead click, and disabled element attempt use the same red/orange/purple scheme as the element heatmap; `contrast_interaction_failure` gets its own color), and crosshairs marking the center.
 
 Bright clusters mean repeated friction in the same viewport region. Scattered dots with no clustering mean friction is distributed across the page, which usually points to a general layout or navigation problem rather than a single broken element.
 
@@ -106,8 +112,10 @@ Bright clusters mean repeated friction in the same viewport region. Scattered do
 ### API
 
 ```
-GET /query/page-heatmap?site_id={id}&page=/checkout
+GET /query/page-heatmap?site_id={id}&page=/checkout&device=desktop
 ```
+
+`device` is optional and accepts `desktop` or `mobile`. Omit it to see every device pooled together.
 
 Response:
 
@@ -116,13 +124,13 @@ Response:
   "page": "/checkout",
   "count": 47,
   "points": [
-    { "vx": 0.512, "vy": 0.234, "signal": "rage_click", "el": "button.submit" },
+    { "vx": 0.512, "vy": 0.234, "px": 0.512, "py": 0.301, "signal": "rage_click", "el": "button.submit" },
     { "vx": 0.891, "vy": 0.044, "signal": "dead_click", "el": "div.header-logo" }
   ]
 }
 ```
 
-Each point has `vx` and `vy` (viewport fractions), a `signal` type, and an optional `el` field with the CSS selector of the element that was clicked. The API returns up to 500 points.
+Each point has `vx` and `vy` (viewport fractions), a `signal` type, and an optional `el` field with the CSS selector of the element that was clicked. Points from newer SDK versions also carry `px`/`py`, the same position in document-space instead of viewport-space; older rows omit it. The API pulls from the last 30 days and returns up to 500 points, most recent first.
 
 ## Friction map
 
@@ -136,7 +144,7 @@ The friction map panel appears on issue detail pages. Each row in the list shows
 
 - An icon for the dominant signal type on that element
 - The CSS selector (e.g., `button.cta-primary`, `div.pricing-toggle`)
-- A horizontal bar colored by score severity (green through red), scaled relative to the highest-signal element on the page
+- A horizontal bar sized relative to the highest-signal element on the page
 - The dominant signal type and number of affected users
 - The raw signal count
 
@@ -170,7 +178,7 @@ Response:
     {
       "selector": "button.submit",
       "page": "/checkout",
-      "score": 42,
+      "score": 31,
       "dominant_signal": "rage_click",
       "signal_count": 31,
       "affected_users": 18
@@ -178,7 +186,7 @@ Response:
     {
       "selector": "div.promo-banner",
       "page": "/checkout",
-      "score": 28,
+      "score": 14,
       "dominant_signal": "dead_click",
       "signal_count": 14,
       "affected_users": 11
@@ -187,7 +195,7 @@ Response:
 }
 ```
 
-Elements are sorted by score descending. The `dominant_signal` is whichever signal type appeared most frequently on that element. `affected_users` counts distinct sessions, not total clicks.
+`score` and `signal_count` are the same number: the total count of friction signals on that element. They're both present so the field name matches whichever the client is already reading elsewhere. Elements are sorted by that count descending. The `dominant_signal` is whichever signal type appeared most frequently on that element, and isn't limited to the three click-based signals the heatmap views render; any friction signal on the page can put an element on this list. `affected_users` counts distinct sessions, not total clicks.
 
 ## How these differ from traditional heatmaps
 

@@ -1,6 +1,6 @@
 # flusterduck-vite-plugin
 
-The Vite plugin. It handles deploy tagging and source map upload at build time so issue evidence resolves to your original source.
+The Vite plugin. It injects the Flusterduck script tag into your built HTML automatically, so you don't hand-edit the template.
 
 ## Install
 
@@ -18,15 +18,14 @@ import { flusterduck } from 'flusterduck-vite-plugin'
 export default defineConfig({
   plugins: [
     flusterduck({
-      secretKey: process.env.FLUSTERDUCK_SECRET_KEY,
-      release: process.env.VITE_APP_VERSION,
+      apiKey: 'fd_pub_xxxxxxxxxxxx',
       environment: 'production',
     }),
   ],
 })
 ```
 
-The plugin records a deploy when the build completes and uploads source maps so stack traces in issue evidence map back to original file names and line numbers. Keep `FLUSTERDUCK_SECRET_KEY` in your build environment, never in client code.
+The plugin adds the script tag to `<head>` during `transformIndexHtml`, pointing at the jsdelivr-hosted SDK bundle. Pass a publishable key only (`fd_pub_`): a secret key is rejected and logged as an error instead of injected. See the [build plugins guide](./build-plugins) for the full option list.
 
 ## Links
 

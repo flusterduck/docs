@@ -27,7 +27,7 @@ Generate again while your plan has an Autofix remaining. Each successful generat
 
 The three-day trial includes **one manual Autofix**. It is one fix for the lifetime of the trial, not one per month. Only a person pressing **Generate fix** can use it; scheduled Autofix Autopilot requires paid billing.
 
-Paid Autofix is a **count of fixes** included by plan: Grow (2/month), Scale (10/month), Pro (30/month), Enterprise (unlimited). The count only decrements on a successful generation and resets each calendar month.
+Paid Autofix is a **count of fixes** included by plan: Grow (2/month), Scale (10/month), Pro (30/month), Enterprise (unlimited). The count only decrements on a successful generation and resets monthly.
 
 If the trial Autofix has been used, Billing shows **Start my plan now**. Starting the plan ends the trial and charges the saved card immediately, after you confirm the plan and price there. If a paid plan needs more fixes, upgrade the plan. There are no add-on packs to buy.
 

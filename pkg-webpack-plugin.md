@@ -1,6 +1,6 @@
 # flusterduck-webpack-plugin
 
-The webpack plugin. It handles deploy tagging and source map upload at build time so issue evidence resolves to your original source.
+The webpack plugin. It injects the Flusterduck script tag into your built HTML automatically, so you don't hand-edit the template.
 
 ## Install
 
@@ -12,20 +12,19 @@ npm install -D flusterduck-webpack-plugin
 
 ```js
 // webpack.config.js
-const { FlusterduckPlugin } = require('flusterduck-webpack-plugin')
+const FlusterduckWebpackPlugin = require('flusterduck-webpack-plugin')
 
 module.exports = {
   plugins: [
-    new FlusterduckPlugin({
-      secretKey: process.env.FLUSTERDUCK_SECRET_KEY,
-      release: process.env.APP_VERSION,
+    new FlusterduckWebpackPlugin({
+      apiKey: 'fd_pub_xxxxxxxxxxxx',
       environment: 'production',
     }),
   ],
 }
 ```
 
-The plugin records a deploy when the build completes and uploads source maps so stack traces in issue evidence map back to original file names and line numbers. Keep `FLUSTERDUCK_SECRET_KEY` in your build environment, never in client code.
+Works with or without `html-webpack-plugin`: when it's installed, the plugin taps its asset-tag hook, otherwise it writes the script tag directly into emitted HTML files. Pass a publishable key only (`fd_pub_`): a secret key is rejected and logged as an error instead of injected. See the [build plugins guide](./build-plugins) for the full option list.
 
 ## Links
 

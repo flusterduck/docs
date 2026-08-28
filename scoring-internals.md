@@ -1,6 +1,6 @@
 # Scoring engine internals
 
-The [confusion scores](/scoring) page covers what scores mean and how to read them. This page covers how they're computed: the exact formula, every signal weight, the confidence system, baseline math, and normalization.
+The [confusion scores](./scoring) page covers what scores mean and how to read them. This page covers how they're computed: the exact formula, every signal weight, the confidence system, baseline math, and normalization.
 
 You're here because a score moved and you want to know why. Good.
 
@@ -11,8 +11,9 @@ Every page score follows this pipeline:
 1. Sum the weighted contribution of each signal: `count * weight * confidence`
 2. Divide by active users on the page (volume normalization)
 3. Multiply by the co-occurrence multiplier
-4. Normalize against the page's baseline (if one exists)
-5. Clamp to 0-100
+4. Normalize against the page's baseline (if one exists), else clamp to 0-100
+5. Apply the small-sample reliability discount
+6. Round to one decimal
 
 In code, the core calculation is two lines:
 
@@ -35,73 +36,114 @@ Without a baseline, the raw score is clamped directly to 0-100.
 
 Every signal has a fixed weight that reflects how strong an indicator of friction it is. Higher weight means a single fire moves the score more. The engine uses these weights unless you've set custom weights via the SDK config.
 
-### Tier 1 (high-confidence friction, weights 12-38)
+There are 132 built-in signal types across four tiers. What each signal detects and how it fires is documented on the [Signals](./signals) page; this page is the weight reference. A `signal()` call with a name outside this list is accepted by the browser but discarded at ingest, so it never receives a weight or affects a score; use a Custom Monitor (which ships as `custom_monitor`, weight 12) for patterns you define yourself.
+
+### Tier 1: direct friction (30 signals, weights 12-38)
+
+A single occurrence is meaningful. These move a page score the most.
+
+| Signal | Weight | Signal | Weight |
+|---|---|---|---|
+| `active_funnel_rejection` | 38 | `overlay_dismiss_struggle` | 22 |
+| `dead_end_submit` | 30 | `payment_method_thrash` | 22 |
+| `layout_shift_rage` | 28 | `form_abandonment` | 20 |
+| `error_recovery_abandon` | 26 | `disabled_element_attempt` | 20 |
+| `rage_click` | 25 | `focus_trap` | 20 |
+| `error_recovery_loop` | 24 | `form_validation_loop` | 20 |
+| `checkout_field_retreat` | 24 | `integration_retry_failure` | 20 |
+| `silent_logout_surprise` | 24 | `keyboard_trap` | 20 |
+| `setup_step_abandon` | 24 | `accidental_click_bounce` | 18 |
+| `cls_interaction_corruption` | 24 | `error_blindness` | 18 |
+| `silent_failure_retry` | 22 | `coupon_code_frustration` | 18 |
+| `invisible_required_field` | 22 | `ghost_toggle` | 18 |
+| | | `phantom_progress` | 18 |
+| | | `undo_panic` | 18 |
+| | | `responsive_layout_break` | 18 |
+| | | `dead_click_trap_zone` | 16 |
+| | | `no_op_interaction` | 15 |
+| | | `dead_click` | 12 |
+
+### Tier 2: navigation and flow friction (54 signals, weights 10-18)
+
+Each single occurrence is moderate-confidence. Clusters are high-confidence.
+
+| Signal | Weight | Signal | Weight |
+|---|---|---|---|
+| `u_turn_navigation` | 18 | `motion_sensitivity_trigger` | 14 |
+| `information_maze` | 18 | `bulk_action_miss` | 14 |
+| `multi_step_reset` | 18 | `post_action_anxiety` | 13 |
+| `reactivation_attempt` | 18 | `settings_hop` | 12 |
+| `load_abandonment` | 16 | `false_swipe` | 12 |
+| `fixed_control_collision` | 16 | `mobile_keyboard_dismiss` | 12 |
+| `autocomplete_fight` | 16 | `dark_pattern_detection` | 12 |
+| `input_format_roulette` | 16 | `plan_comparison_scroll` | 12 |
+| `trust_hesitation` | 16 | `decision_paralysis` | 12 |
+| `pricing_comparison_stall` | 16 | `faq_bounce` | 12 |
+| `downgrade_hesitation` | 16 | `font_swap_interaction` | 12 |
+| `permission_denial_break` | 16 | `loading_interaction` | 12 |
+| `premature_commit_reversal` | 16 | `long_task_interaction_block` | 12 |
+| `cancellation_flow_confusion` | 16 | `pagination_thrash` | 12 |
+| `search_zero_results` | 16 | `settings_churn` | 12 |
+| `scroll_hijack_rage` | 16 | `gesture_mismatch` | 12 |
+| `screen_reader_dead_end` | 16 | `tap_target_adjacency` | 12 |
+| `modal_stack` | 16 | `focus_order_confusion` | 12 |
+| `query_thrashing` | 15 | `contrast_interaction_failure` | 12 |
+| `filter_spiral` | 15 | `custom_monitor` | 12 |
+| `tab_thrash` | 15 | `keyboard_nav_frustration` | 10 |
+| `copy_paste_rework` | 14 | | |
+| `repeat_form_input` | 14 | | |
+| `sticky_obstruction_click` | 14 | | |
+| `paste_blocked` | 14 | | |
+| `clipboard_block` | 14 | | |
+| `validation_timing_mismatch` | 14 | | |
+| `billing_shipping_confusion` | 14 | | |
+| `pricing_toggle_regret` | 14 | | |
+| `viewport_dead_zone` | 14 | | |
+| `first_value_delay` | 14 | | |
+| `navigation_confusion` | 14 | | |
+| `feature_discovery_failure` | 14 | | |
+
+### Tier 3: passive and ambient confusion (45 signals, weights 6-26)
+
+Lower individual weight, but meaningful in aggregate, plus the newer blank-page, reload, and auth/network dead-end detectors, which weight closer to tier 1 because a single fire is already high-confidence.
+
+| Signal | Weight | Signal | Weight |
+|---|---|---|---|
+| `payment_widget_failure` | 26 | `scroll_to_click_confusion` | 10 |
+| `empty_page_hold` | 26 | `copy_failure` | 10 |
+| `oauth_dead_end` | 24 | `copy_frustration` | 10 |
+| `otp_entry_struggle` | 22 | `jargon_hover_loop` | 10 |
+| `deep_link_dead_end` | 22 | `tooltip_dependency` | 10 |
+| `offline_interaction_blackhole` | 20 | `swipe_miss` | 10 |
+| `captcha_challenge_rage` | 20 | `thumb_zone_miss` | 10 |
+| `auth_roundtrip_limbo` | 20 | `jerky_scrolling` | 9 |
+| `reload_retry` | 20 | `viewport_thrashing` | 9 |
+| `close_click_reversal` | 18 | `visibility_thrashing` | 9 |
+| `spa_back_button_dead` | 18 | `passive_drift` | 8 |
+| `thrash_cursor` | 15 | `input_correction` | 8 |
+| `help_hunt` | 14 | `image_decode_delay` | 8 |
+| `confidence_collapse` | 13 | `content_overload_scroll` | 8 |
+| `target_near_miss` | 12 | `reading_abandonment` | 8 |
+| `user_confusion_idle` | 12 | `text_select_frustration` | 8 |
+| `scroll_hijack` | 12 | `notification_fatigue` | 8 |
+| `thrash_hover` | 10 | `video_autoplay_escape` | 8 |
+| `text_selection_thrash` | 10 | `pinch_zoom` | 8 |
+| `third_party_script_block` | 10 | `orientation_thrash` | 8 |
+| `memory_pressure_jank` | 10 | `hover_dwell` | 7 |
+| `scroll_to_nowhere` | 10 | `scroll_depth_abandon` | 6 |
+| | | `slow_interaction` | 6 |
+
+### Revenue tier (3 signals, weights 30-40)
+
+Revenue signals carry the heaviest weights because they represent friction that directly costs money.
 
 | Signal | Weight | What it detects |
 |---|---|---|
-| `active_funnel_rejection` | 38 | High-intent user hits friction at terminal step, leaves without converting |
-| `dead_end_submit` | 30 | Submit button clicked, no network request or DOM change follows |
-| `layout_shift_rage` | 28 | Click lands where a target was before a layout shift moved it |
-| `empty_page_hold` | 26 | Ten-plus foreground seconds after load the visitor still sees effectively nothing, sustained across two checks |
-| `rage_click` | 25 | 3+ clustered clicks within two seconds |
-| `error_recovery_loop` | 24 | 3+ submit attempts with repeated errors on the same form |
-| `oauth_dead_end` | 24 | Provider sign-in click leaves the page and the user returns to an auth screen with an account-mismatch error |
-| `silent_failure_retry` | 22 | Repeated clicks on a primary action while loading stays unresolved |
-| `overlay_dismiss_struggle` | 22 | Repeated Escape presses and close clicks while a modal stays open |
-| `form_abandonment` | 20 | User enters form data, exits without submitting |
-| `reload_retry` | 20 | The page is reloaded as a frustration response: the prior load showed nothing, or reload-spamming within 90 seconds |
-| `disabled_element_attempt` | 20 | User clicks a disabled control more than once |
-| `focus_trap` | 20 | Keyboard focus can't escape a container despite Tab and Escape |
-| `accidental_click_bounce` | 18 | Navigation reversed almost immediately after the click that caused it |
-| `dead_click` | 12 | Click on a non-interactive element with no response |
+| `value_collapse_downgrade` | 40 | User intended a higher plan, hit friction, bought a lower one |
+| `layout_exhaustion_settling` | 34 | Long customizer effort ends in abandonment and a base-tier purchase |
+| `price_shock_abandon` | 30 | User dwells on a price or total, then leaves shortly after |
 
-### Tier 2 (behavioral patterns, weights 10-18)
-
-| Signal | Weight |
-|---|---|
-| `u_turn_navigation` | 18 |
-| `information_maze` | 18 |
-| `multi_step_reset` | 18 |
-| `close_click_reversal` | 18 |
-| `load_abandonment` | 16 |
-| `fixed_control_collision` | 16 |
-| `query_thrashing` | 15 |
-| `filter_spiral` | 15 |
-| `tab_thrash` | 15 |
-| `copy_paste_rework` | 14 |
-| `repeat_form_input` | 14 |
-| `bulk_action_miss` | 14 |
-| `sticky_obstruction_click` | 14 |
-| `post_action_anxiety` | 13 |
-| `settings_hop` | 12 |
-| `false_swipe` | 12 |
-| `keyboard_nav_frustration` | 10 |
-
-### Tier 3 (ambient signals, weights 6-15)
-
-| Signal | Weight |
-|---|---|
-| `thrash_cursor` | 15 |
-| `help_hunt` | 14 |
-| `confidence_collapse` | 13 |
-| `target_near_miss` | 12 |
-| `user_confusion_idle` | 12 |
-| `thrash_hover` | 10 |
-| `text_selection_thrash` | 10 |
-| `jerky_scrolling` | 9 |
-| `viewport_thrashing` | 9 |
-| `visibility_thrashing` | 9 |
-| `passive_drift` | 8 |
-| `scroll_depth_abandon` | 6 |
-
-### Revenue tier (weights 34-40)
-
-| Signal | Weight |
-|---|---|
-| `value_collapse_downgrade` | 40 | 
-| `layout_exhaustion_settling` | 34 |
-
-Revenue signals carry the heaviest weights because they represent friction that directly costs money. A single `value_collapse_downgrade` fire (user intended a higher plan, hit friction, bought a lower one) contributes 40 points per fire before normalization.
+A single `value_collapse_downgrade` fire contributes 40 points before normalization: more than any tier 1 signal.
 
 ### Custom weights
 
@@ -174,6 +216,34 @@ score = rawScore * coOccurrenceMultiplier
 ```
 
 The logic: if 50 users are all hitting friction on the same page at the same time, something is probably broken. That's qualitatively different from 50 users hitting friction over a week. The multiplier captures that distinction.
+
+## Small-sample reliability discount
+
+One catastrophic session shouldn't paint a page 100/critical. A page score is a per-active-user intensity, so a single confused visitor on a page that otherwise sees no traffic can already clear 80 before this discount is applied.
+
+The engine scales the final 0-100 score by a factor based on how many active users the page actually had:
+
+```typescript
+function smallSampleFactor(activeUsers: number): number {
+  if (activeUsers <= 0) return 0;
+  if (activeUsers >= 5) return 1;
+  return Math.sqrt(activeUsers / 5);
+}
+
+score *= smallSampleFactor(activeUsers);
+```
+
+Full trust starts at 5 active users. Below that, the score is scaled by `sqrt(activeUsers / 5)`:
+
+| Active users | Factor | A raw 100 becomes |
+|---|---|---|
+| 1 | 0.45 | 45 (alert, worth a look) |
+| 2 | 0.63 | 63 |
+| 3 | 0.77 | 77 |
+| 4 | 0.89 | 89 |
+| 5+ | 1.00 | 100 (untouched) |
+
+The square root keeps the ramp gentle, so real friction seen by two or three users still registers as something worth investigating, rather than being suppressed to near-zero. This discount is applied to the final score only. The raw (pre-normalization) score, the baseline, and the deviation used for anomaly and trend detection are all computed before this factor and are unaffected by it.
 
 ## Baseline computation
 

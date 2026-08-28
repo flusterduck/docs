@@ -82,6 +82,8 @@ export function UpgradeButton() {
 }
 ```
 
+Full props table, StrictMode behavior, and the consent-timing gotcha: [Next.js](./next).
+
 ---
 
 ## React
@@ -119,7 +121,7 @@ function CheckoutForm() {
   const { signal, track } = useFlusterduck()
 
   const handleAbandon = () => {
-    signal('form_abandonment', { form: 'checkout' })
+    signal('form_abandonment', { metadata: { form: 'checkout' } })
   }
 
   const handleComplete = () => {
@@ -149,6 +151,8 @@ The provider accepts the same config options as `init()`:
 >
 ```
 
+Full props table, StrictMode behavior, and the consent-timing gotcha: [React](./react).
+
 ---
 
 ## Vue 3
@@ -168,7 +172,7 @@ import App from './App.vue'
 const app = createApp(App)
 
 app.use(FlusterduckPlugin, {
-  apiKey: import.meta.env.VITE_FLUSTERDUCK_KEY,
+  key: import.meta.env.VITE_FLUSTERDUCK_KEY,
   segment: { app_version: import.meta.env.VITE_APP_VERSION ?? 'unknown' },
 })
 
@@ -179,6 +183,8 @@ app.mount('#app')
 # .env
 VITE_FLUSTERDUCK_KEY=fd_pub_xxxxxxxxxxxx
 ```
+
+Note the option is `key`, not `apiKey`. The plugin checks `options.key` specifically; anything else passed there is silently ignored and nothing initializes.
 
 Use the `useFlusterduck` composable in your components:
 
@@ -198,6 +204,8 @@ function onUpgradeClick() {
 </template>
 ```
 
+Full plugin options, gotchas, and SSR notes: [Vue](./vue).
+
 ---
 
 ## SvelteKit
@@ -216,7 +224,7 @@ Initialize in your root layout:
 
   if (browser) {
     initFlusterduck({
-      apiKey: import.meta.env.PUBLIC_FLUSTERDUCK_KEY,
+      key: import.meta.env.PUBLIC_FLUSTERDUCK_KEY,
     })
   }
 </script>
@@ -228,6 +236,8 @@ Initialize in your root layout:
 # .env
 PUBLIC_FLUSTERDUCK_KEY=fd_pub_xxxxxxxxxxxx
 ```
+
+The option is `key`, not `apiKey`. `initFlusterduck` checks `config.key` specifically, so a mistyped option name fails silently instead of erroring.
 
 Use the tracking functions in any component:
 
@@ -243,6 +253,8 @@ Use the tracking functions in any component:
 <button on:click={handleUpgrade}>Upgrade</button>
 ```
 
+Full exports, gotchas, and why there's no store: [SvelteKit](./svelte).
+
 ---
 
 ## Nuxt 3
@@ -251,16 +263,24 @@ Use the tracking functions in any component:
 pnpm add flusterduck @flusterduck/nuxt
 ```
 
-Add the module to your Nuxt config:
+There's no `modules` entry for this one. `@flusterduck/nuxt` exports a plugin factory, not a Nuxt module, so you wire it up as a client-only plugin file yourself:
+
+```ts
+// plugins/flusterduck.client.ts
+import { createFlusterduckPlugin } from '@flusterduck/nuxt'
+
+export default defineNuxtPlugin((nuxtApp) => {
+  return createFlusterduckPlugin({
+    key: useRuntimeConfig().public.flusterduckKey,
+  })(nuxtApp)
+})
+```
 
 ```ts
 // nuxt.config.ts
 export default defineNuxtConfig({
-  modules: ['@flusterduck/nuxt'],
-
-  flusterduck: {
-    apiKey: process.env.NUXT_PUBLIC_FLUSTERDUCK_KEY,
-    segment: { app_version: process.env.NUXT_PUBLIC_APP_VERSION ?? 'unknown' },
+  runtimeConfig: {
+    public: { flusterduckKey: '' },
   },
 })
 ```
@@ -270,11 +290,11 @@ export default defineNuxtConfig({
 NUXT_PUBLIC_FLUSTERDUCK_KEY=fd_pub_xxxxxxxxxxxx
 ```
 
-Use the composable in your pages and components:
+The `.client.ts` suffix keeps the plugin off the server render, where the SDK can't run anyway. Import `signal` and `track` from `@flusterduck/nuxt` in your pages and components:
 
 ```vue
 <script setup lang="ts">
-const { signal, track } = useFlusterduck()
+import { track, signal } from '@flusterduck/nuxt'
 
 function onCheckout() {
   track('plan_intent', { plan_id: 'grow', amount_cents: 3900, billing: 'monthly' })
@@ -282,7 +302,7 @@ function onCheckout() {
 </script>
 ```
 
-The module auto-initializes on the client side. No additional setup needed.
+Full plugin wiring, options, and the mistake to avoid (returning `createFlusterduckPlugin(...)` without calling it): [Nuxt 3](./nuxt).
 
 ---
 
@@ -303,14 +323,13 @@ init({
 })
 ```
 
-Or via script tag (CDN):
+Or skip the build step with the script tag:
 
 ```html
-<script src="https://cdn.flusterduck.com/sdk/latest/flusterduck.min.js"></script>
-<script>
-  Flusterduck.init({ key: 'fd_pub_xxxxxxxxxxxx' })
-</script>
+<script src="https://flusterduck.com/d.js" data-key="fd_pub_xxxxxxxxxxxx" data-dnt="false" async></script>
 ```
+
+No `Flusterduck.init(...)` call needed. The bootstrap reads its config straight off the tag's `data-*` attributes. Keep `data-dnt="false"`: the SDK captures no PII, and the default Do Not Track behavior silently drops 30-50% of visitors on Firefox, Brave, and other privacy-focused browsers. Full script-tag reference: [Installation](./install).
 
 The SDK has no opinion about your framework. It only has opinions about your buttons.
 
@@ -327,3 +346,7 @@ The SDK has no opinion about your framework. It only has opinions about your but
 | Node / server | `FLUSTERDUCK_SECRET_KEY` (use `fd_sec_`) |
 
 The `fd_pub_` key is the only key safe for client-side environment variables. Everything else stays on the server.
+
+## Injecting the script tag at build time
+
+Plain Vite or webpack apps without one of the framework wrappers above can skip hand-editing `index.html` too: [Build Plugins](./build-plugins) covers `flusterduck-vite-plugin` and `flusterduck-webpack-plugin`, which inject the script tag into your built HTML automatically.

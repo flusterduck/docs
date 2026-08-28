@@ -18,27 +18,18 @@ If you see tier 1 signals on a critical element (a checkout button, a signup for
 | `active_funnel_rejection` | User initiated a multi-step flow and exited before the first meaningful step. Not a casual bounce: they started, then left. |
 | `dead_end_submit` | User submitted a form and received no visible feedback. No success state, no error message, nothing. |
 | `accidental_click_bounce` | User clicked an element and immediately hit the back button. Likely an accidental tap or misclick. |
-| `error_recovery_loop` | User encountered an error and tried the same action multiple times in quick succession without changing their input. |
+| `error_recovery_loop` | An unhandled JavaScript error, rejected promise, failed network request, or console-logged error occurred during the session. Console capture matters because most production errors never reach `window.onerror`: error boundaries and `.catch(console.error)` swallow them, and the console is where they land. Messages are scrubbed of tokens, secrets, and PII in the browser; identical messages emit once per session with a hard per-session cap. Together with interaction context this is the flight recorder: what the code was doing at the moment users struggled, attached to issues as evidence and fed to the AI diagnosis and Autofix briefs, with no session recording anywhere. The SDK ships this on the wire as `error_encounter`, an older name that still normalizes to this same signal (see Legacy aliases, further down this page); it isn't a second, separate detector. |
 | `silent_failure_retry` | User repeated an action that appeared to succeed but produced no visible result. Common with async operations that fail silently. |
 | `form_abandonment` | User focused one or more form fields and left without submitting. Threshold: at least one meaningful field interaction. |
-| `error_encounter` | An unhandled JavaScript error, rejected promise, failed network request, or console-logged error occurred during the session. Console capture matters because most production errors never reach `window.onerror`: error boundaries and `.catch(console.error)` swallow them, and the console is where they land. Messages are scrubbed of tokens, secrets, and PII in the browser; identical messages emit once per session with a hard per-session cap. Together with interaction context this is the flight recorder: what the code was doing at the moment users struggled, attached to issues as evidence and fed to the AI diagnosis and Autofix briefs, with no session recording anywhere. |
 | `form_validation_loop` | User submitted a form, hit a validation error, edited the flagged field, and got the same error again. Three or more cycles on a single field within two minutes fires the signal. |
 | `invisible_required_field` | User submitted a form and validation failed on a required field they can't see. The field is offscreen, inside a closed `<details>`, behind an inactive tab, or hidden by a parent with `display:none`. |
-| `offline_interaction_blackhole` | The device is offline and the user keeps clicking interactive elements that cannot respond, with nothing on the page saying the connection is gone. |
-| `spa_back_button_dead` | Browser Back presses produce no visible reaction: no route change, no DOM update, no scroll restore within the settle window. |
-| `otp_entry_struggle` | A pasted one-time code lands in only the first box of a segmented verification input, or the user gives up and clicks resend. Only the paste length is reported, never the code. |
-| `captcha_challenge_rage` | The CAPTCHA challenge frame is inserted repeatedly within a minute: users keep failing or re-triggering the challenge before they can proceed. |
-| `payment_widget_failure` | A payment provider iframe (Stripe, PayPal, Braintree, Adyen, Square) never loaded or rendered at zero size on a visible page: checkout shows a blank payment area. Only the provider host is reported, never the frame URL. |
-| `auth_roundtrip_limbo` | The user sits on a check-your-email screen, leaves for their inbox and returns 2+ times over 90+ seconds, and the verification never completes. |
-| `oauth_dead_end` | The user clicks a provider sign-in (Google, GitHub, Apple, Microsoft, Facebook, X, SSO), leaves for the provider, and returns within minutes to an auth screen showing an account-mismatch error. The classic wrong-door bounce: they meant to sign up, landed on login, and no account got created or linked. Error copy is matched in the browser, never transmitted. |
-| `empty_page_hold` | Ten-plus seconds of foreground time after load, the visitor still sees effectively nothing, sustained across two checks (10s and 14s) so a slow-but-arriving page stays silent. Two variants in the evidence: `starved` (a spinner or skeleton with no content ever arriving) and `reveal_dead` (substantial content rendered but stuck visually hidden, the blank page a broken reveal animation leaves behind). Hidden tabs never accumulate time, minimal pages with a real form never fire, and only counts and durations leave the browser. |
-| `reload_retry` | The page is reloaded as a frustration response. `starved_reload`: the prior load of the same URL never showed the visitor content and they reloaded to try again. `rage_reload`: second-or-later reload of the same URL within 90 seconds even when content had arrived. A single reload of a working page never fires; page identity is compared as origin plus pathname in the browser and never transmitted. |
-| `deep_link_dead_end` | An external or campaign arrival landed on a page whose title or top heading reads as not-found. Only the referrer host is reported, never the full referrer. |
 | `ghost_toggle` | User clicked a toggle, checkbox, or switch and the state either never changed (swallowed click) or changed then silently reverted within 2 seconds. Requires 2+ ghost events on the same control within 30 seconds. |
-| `premature_commit_reversal` | User clicked a primary CTA (submit, buy, confirm, add to cart) and reversed the action within 2 seconds via browser back, Ctrl+Z, Escape, or clicking a cancel element. The speed of the reversal indicates regret or accidental commitment. |
+| `no_op_interaction` | User clicked the same interactive control twice and nothing happened: no DOM change, navigation, network request, scroll, or focus move. Unlike `disabled_element_attempt`, the control isn't marked disabled. It just doesn't do anything. |
 | `cls_interaction_corruption` | A layout shift moved the user's click target between mousedown and mouseup. They pressed on the right element, but the page yanked it away and the click landed on something else. |
-| `paste_blocked` | User pasted into an input field but the value didn't change. The site is blocking paste, usually on password confirmation or email fields. |
-| `autocomplete_fight` | Browser autofill populated multiple form fields and site JavaScript immediately cleared or shortened the values. Common on checkout, login, and address forms where custom input masking fights the browser. |
+| `dead_click_trap_zone` | Three or more dead clicks landed in the same viewport grid zone (the screen is divided into a 4x4 grid) within 90 seconds. A hot spot of non-interactive content that users keep mistaking for a button. |
+| `keyboard_trap` | Focus can't escape a container. The user pressed Tab 6+ consecutive times and focus stayed within the same parent region without the user clicking elsewhere. |
+| `focus_trap` | User pressed Tab or Escape 5+ times within 3 seconds inside a dialog, menu, or modal container without escaping it. The trap isn't releasing focus when the user expects it to. |
+| `phantom_progress` | A progress indicator (stepper, progress bar, step counter) is visible but the user has been stuck on the same step for 60+ seconds while actively clicking and typing. The wizard isn't advancing. |
 
 ## Tier 2: Navigation and flow friction
 
@@ -56,25 +47,30 @@ If a tier 2 signal appears 20+ times on the same page, or you're seeing 5+ diffe
 | `filter_spiral` | User applied and removed filters repeatedly without settling. Likely an expectation mismatch between filters and results. |
 | `post_action_anxiety` | User completed an action but immediately checked for confirmation or left the page. Suggests missing confirmation feedback. |
 | `settings_hop` | User visited settings or preferences multiple times in a session without finding what they needed. |
-| `copy_paste_rework` | User selected text and then immediately re-typed it. Often indicates a pre-fill or autocomplete that didn't work. |
+| `copy_paste_rework` | A paste into a field was blocked, and the user retyped the same content by hand right afterward. The clipboard block cost them the shortcut they reached for. |
 | `repeat_form_input` | User cleared and re-entered the same field more than once. Usually a validation message that's unclear or delayed. |
 | `bulk_action_miss` | User committed the same value into 4 or more structurally identical sibling fields, one row at a time, within 3 minutes. A copy-to-all control went unnoticed, or doesn't exist. The value itself never leaves the browser: only counts and field identity are reported. |
 | `decision_paralysis` | User's cursor oscillated between two or more interactive elements (pricing tiers, plan selectors, CTAs) with 800ms+ dwell on each, repeating the back-and-forth at least twice within 12 seconds. They can't decide. |
-| `friction_cascade` | A tier 1 signal fired and was followed by 2+ distinct tier 2 or tier 3 signal types within 90 seconds on the same page. The tier 1 signal starts the measured sequence; the later signals don't prove its cause. |
-| `keyboard_trap` | Focus can't escape a container. The user pressed Tab 6+ consecutive times and focus stayed within the same parent region without the user clicking elsewhere. |
 | `modal_stack` | Two or more modal, dialog, or overlay elements are visible at the same time. Stacked modals confuse users: dismiss buttons close the wrong layer, keyboard focus traps conflict, and users lose track of which layer they're interacting with. |
-| `dead_click_trap_zone` | Three or more dead clicks landed in the same viewport grid zone (the screen is divided into a 4x4 grid) within 90 seconds. A hot spot of non-interactive content that users keep mistaking for a button. |
 | `navigation_confusion` | User visited 5+ distinct pages within 30 seconds, spending less than 5 seconds on each. They're lost and clicking through pages trying to find something. |
-| `scroll_to_click_confusion` | User scrolled down, reversed direction by at least 30% of the viewport, and clicked an element within 3 seconds of the reversal. They overshot something they wanted and had to scroll back to find it. |
 | `tab_thrash` | User pressed Tab 10+ times within 5 seconds. Rapid tabbing with direction changes signals they're hunting for a focusable element they can't reach. |
-| `focus_trap` | User pressed Tab or Escape 5+ times within 3 seconds inside a dialog, menu, or modal container without escaping it. The trap isn't releasing focus when the user expects it to. |
 | `keyboard_nav_frustration` | User pressed arrow keys 15+ times within 5 seconds inside a listbox, menu, or tree widget. They're scrolling through options without finding what they want. |
+| `premature_commit_reversal` | User clicked a primary CTA (submit, buy, confirm, add to cart) and reversed the action within 2 seconds via browser back, Ctrl+Z, Escape, or clicking a cancel element. The speed of the reversal indicates regret or accidental commitment. |
+| `paste_blocked` | User pasted into an input field but the value didn't change. The site is blocking paste, usually on password confirmation or email fields. |
+| `clipboard_block` | Copy or paste is prevented on a field or text the user is actively working with, and they retry. A stricter cousin of `paste_blocked`: this one covers copy as well as paste. |
+| `autocomplete_fight` | Browser autofill populated multiple form fields and site JavaScript immediately cleared or shortened the values. Common on checkout, login, and address forms where custom input masking fights the browser. |
+| `trust_hesitation` | User focused a sensitive field (password, email, credit card) and then clicked through to a privacy, terms, security, or about page before typing more than 2 characters. They didn't trust the form enough to fill it in. |
+| `dark_pattern_detection` | A form ships a pre-checked opt-in or uses negation language ("uncheck to decline") that nudges users into consenting without reading. Flags the page's own design, not something the user did wrong. |
+| `search_zero_results` | A search returns nothing and the user has to refine the query or give up. |
+| `custom_monitor` | A monitor you defined yourself, in Settings, matched the behavior pattern you configured. Everything else in this table ships built in; this is the one signal type you write. |
 
 ## Tier 3: Passive confusion
 
-Lower individual weight, but meaningful in aggregate. These often surface chronic friction that lacks the dramatic edge of rage clicks, the kind of friction users tolerate rather than abandon over.
+Most of this tier is low individual weight but meaningful in aggregate: chronic friction that lacks the dramatic edge of rage clicks, the kind users tolerate rather than abandon over.
 
-A page with dense tier 3 signals and no tier 1 or 2 signals is worth investigating. It usually means users are managing confusion rather than hitting a wall.
+A handful of entries break that pattern on purpose. Auth, payment, and connectivity dead ends (`payment_widget_failure`, `auth_roundtrip_limbo`, `offline_interaction_blackhole`, and others below) are single-occurrence, high-severity events. They land in tier 3 because each one is narrow and specific, not because a single fire doesn't matter. Weight, not tier, decides how much a signal moves your page score; see "How scores and issues work" at the bottom of this page.
+
+A page with dense tier 3 signals and no tier 1 or 2 signals is usually one of two things: users managing chronic, tolerated confusion, or a page tripping the narrower dead-end detectors. Check which signals are actually firing before deciding which one you're looking at.
 
 | Signal | What it means |
 |---|---|
@@ -85,22 +81,30 @@ A page with dense tier 3 signals and no tier 1 or 2 signals is worth investigati
 | `text_selection_thrash` | User selected text multiple times rapidly. May be trying to copy something that's being blocked. |
 | `jerky_scrolling` | User's scroll pattern was erratic: fast then stopped, or reversed frequently. Usually indicates a busy page layout. |
 | `thrash_cursor` | Rapid cursor movement across the page with no clear direction. A general confusion indicator. |
-| `viewport_thrashing` | User zoomed in and out multiple times. On mobile, this usually means text is too small or layout is not responsive. |
-| `visibility_thrashing` | User repeatedly scrolled elements in and out of view, possibly trying to compare content across sections. |
+| `viewport_thrashing` | Three or more meaningful viewport resize events within 5 seconds. Usually a devtools panel toggling, a window being dragged between monitors, or a mobile browser's chrome showing and hiding, but a page that reflows badly during it will show up here. Pinch-to-zoom is its own signal: see `pinch_zoom` below. |
+| `visibility_thrashing` | User switched away from the tab and back again several times in a row while in the middle of a task: alt-tabbing to check email, a second monitor, another app, or another tab, then returning. Fires only when the round trips started mid-task, not on an idle tab. |
 | `passive_drift` | User stayed on a page longer than average but generated very few events. Could be reading carefully or completely lost. |
-| `help_hunt` | User opened FAQ, support, documentation, or help pages during an active conversion flow. |
-| `trust_hesitation` | User focused a sensitive field (password, email, credit card) and then clicked through to a privacy, terms, security, or about page before typing more than 2 characters. They didn't trust the form enough to fill it in. |
+| `help_hunt` | User clicked 3 or more help, FAQ, support, or tooltip elements within 60 seconds. They're actively hunting for an answer the page isn't giving them directly. |
 | `tooltip_dependency` | User hovered over the same tooltip trigger 3+ times within 5 minutes, spending 500ms+ on each hover. The label is unclear and they keep re-reading the explanation. |
-| `phantom_progress` | A progress indicator (stepper, progress bar, step counter) is visible but the user has been stuck on the same step for 60+ seconds while actively clicking and typing. The wizard isn't advancing. |
 | `scroll_to_nowhere` | User scrolled to the bottom of the page and immediately scrolled back up within 3 seconds. They expected more content below, or couldn't find what they were looking for. |
+| `scroll_to_click_confusion` | User scrolled down, reversed direction by at least 30% of the viewport, and clicked an element within 3 seconds of the reversal. They overshot something they wanted and had to scroll back to find it. |
 | `notification_fatigue` | Browser notification permission prompt was denied within 800ms. A sub-second denial means the prompt was unwanted or the site asked for permissions before establishing trust. |
 | `video_autoplay_escape` | A video or audio element autoplayed and the user immediately paused it, muted it, or scrolled past it within 3 seconds. Autoplaying media is annoying enough that they took evasive action. |
 | `scroll_hijack` | User's scroll reversed direction 4+ times within 3 seconds with large-stroke reversals. The page is overriding native scroll behavior (smooth-scroll libraries, scroll-snap fights, parallax effects). |
 | `input_correction` | User deleted 3+ characters and retyped a field at least twice within 60 seconds. They keep correcting their input, likely because a validation rule or format requirement is unclear. |
 | `hover_dwell` | User hovered over an interactive element for 2+ seconds without clicking. They're reading it, evaluating it, or unsure what it does. Cooldown of 30 seconds per element prevents noise. |
-| `exit_intent` | User's cursor left the browser viewport toward the top of the screen (toward the tab bar or address bar). Classic indicator they're about to close the tab or leave. Fires after 3+ seconds on page, once per 60 seconds. |
 | `copy_frustration` | User triggered the copy action 3+ times within 15 seconds. Repeated copy attempts suggest the selection isn't working as expected or copy is being blocked. |
 | `scroll_depth_abandon` | Tracks the deepest scroll point reached before the user leaves the page. Fires on page hide or visibility change with the max scroll depth as a percentage. Useful for identifying where users give up on long pages. |
+| `offline_interaction_blackhole` | The device is offline and the user keeps clicking interactive elements that cannot respond, with nothing on the page saying the connection is gone. |
+| `spa_back_button_dead` | Browser Back presses produce no visible reaction: no route change, no DOM update, no scroll restore within the settle window. |
+| `otp_entry_struggle` | A pasted one-time code lands in only the first box of a segmented verification input, or the user gives up and clicks resend. Only the paste length is reported, never the code. |
+| `captcha_challenge_rage` | The CAPTCHA challenge frame is inserted repeatedly within a minute: users keep failing or re-triggering the challenge before they can proceed. |
+| `payment_widget_failure` | A payment provider iframe (Stripe, PayPal, Braintree, Adyen, Square) never loaded or rendered at zero size on a visible page: checkout shows a blank payment area. Only the provider host is reported, never the frame URL. |
+| `auth_roundtrip_limbo` | The user sits on a check-your-email screen, leaves for their inbox and returns 2+ times over 90+ seconds, and the verification never completes. |
+| `oauth_dead_end` | The user clicks a provider sign-in (Google, GitHub, Apple, Microsoft, Facebook, X, SSO), leaves for the provider, and returns within minutes to an auth screen showing an account-mismatch error. The classic wrong-door bounce: they meant to sign up, landed on login, and no account got created or linked. Error copy is matched in the browser, never transmitted. |
+| `empty_page_hold` | Ten-plus seconds of foreground time after load, the visitor still sees effectively nothing, sustained across two checks (10s and 14s) so a slow-but-arriving page stays silent. Two variants in the evidence: `starved` (a spinner or skeleton with no content ever arriving) and `reveal_dead` (substantial content rendered but stuck visually hidden, the blank page a broken reveal animation leaves behind). Hidden tabs never accumulate time, minimal pages with a real form never fire, and only counts and durations leave the browser. |
+| `reload_retry` | The page is reloaded as a frustration response. `starved_reload`: the prior load of the same URL never showed the visitor content and they reloaded to try again. `rage_reload`: second-or-later reload of the same URL within 90 seconds even when content had arrived. A single reload of a working page never fires; page identity is compared as origin plus pathname in the browser and never transmitted. |
+| `deep_link_dead_end` | An external or campaign arrival landed on a page whose title or top heading reads as not-found. Only the referrer host is reported, never the full referrer. |
 
 ## Mobile and touch friction
 
@@ -111,6 +115,7 @@ Gesture-level friction that mostly shows up on touch devices, though `false_swip
 | `false_swipe` | User performed a clear horizontal swipe or drag over an element that looks swipeable (a carousel, slider, scroll-snap rail, or anything with draggable/grab styling), but the element and its scrollable ancestors did not move and no page transition occurred. A false affordance: it looked swipeable, the user tried, and nothing responded. |
 | `swipe_miss` | User swiped horizontally on an element that isn't swipeable, but the page has swipeable elements elsewhere (a carousel or slider exists). They swiped in the wrong spot. |
 | `orientation_thrash` | User rotated their device 3+ times within 30 seconds. They're trying to find an orientation where the content is readable or the layout makes sense. |
+| `pinch_zoom` | Two or more pinch-to-zoom gestures within 30 seconds on a page that isn't a map. Content is too small to read or tap as rendered. Exempts map elements, where pinch-zoom is the expected interaction. |
 
 ## Revenue and close behavior
 
@@ -153,6 +158,7 @@ Signals tied to page speed and responsiveness. These correlate with user frustra
 | Signal | What it means |
 |---|---|
 | `long_task_interaction_block` | User clicked, tapped, or pressed a key during or immediately after a long task (50ms+ main thread block). The browser's event loop was frozen and their input was delayed. Payload includes the task duration and estimated delay. |
+| `slow_interaction` | An interaction took more than 200ms to produce its next paint. Lower-severity sibling of `long_task_interaction_block`: the browser wasn't fully frozen, but the response still lagged past what feels instant. |
 | `loading_interaction` | User clicked an element that was in a loading state (marked with `aria-busy`, disabled, or a spinner CSS class) and clicked it again before the loading finished. They're waiting and losing patience. |
 | `lcp` | Largest Contentful Paint measurement for the page. Rated good (under 2500ms), needs improvement (2500-4000ms), or poor (over 4000ms). |
 | `inp` | Interaction to Next Paint measurement. Rated good (under 200ms), needs improvement (200-500ms), or poor (over 500ms). Captures how responsive the page feels after it loads. |
@@ -165,8 +171,10 @@ Session-level and cross-signal patterns. These don't detect a single friction mo
 | Signal | What it means |
 |---|---|
 | `session_toxicity_score` | A running 0-100 score reflecting cumulative friction across the session. Computed from the weighted sum of all signals, the number of distinct pages with friction, and the number of distinct signal types observed. Levels: calm (0-20), building (21-40), frustrated (41-60), toxic (61-80), meltdown (81-100). Emitted every 60 seconds and on page unload. |
-| `frustration_burst` | Multiple friction signals fired within a 60-second window and the weighted total crossed a severity threshold. Levels: low, medium, high, critical. Includes the top contributing signal types and detected behavioral sequences (like rage click followed by form validation loop). |
+| `frustration_burst` | Multiple friction signals fired within a 60-second window and the weighted total crossed a severity threshold. Levels: low, medium, high, critical. Includes the top contributing signal types and detected behavioral sequences (like rage click followed by form validation loop). Context, not a friction type of its own: it's stored as a raw event and never clusters into an issue on its own. |
+| `friction_cascade` | A tier 1 signal fired and was followed by 2+ distinct tier 2 or tier 3 signal types within 90 seconds on the same page. The tier 1 signal starts the measured sequence; the later signals don't prove its cause. Same as `frustration_burst`: context around a cluster, not a weighted friction type by itself. |
 | `element_impression` | Tracks when a watched element (marked with `[data-fd-impression]` or a custom selector) enters the viewport. Records first-seen time and visibility percentage. Not a friction signal, but useful for measuring whether users actually see a specific element before abandoning. |
+| `exit_intent` | User's cursor left the browser viewport toward the top of the screen (toward the tab bar or address bar). Classic indicator they're about to close the tab or leave. Fires after 3+ seconds on page, once per 60 seconds. Like the two above, it's context rather than a weighted friction type: most exit intents are just people leaving, not evidence of confusion. |
 
 ## UX anti-patterns
 
@@ -237,12 +245,11 @@ Signals that surface when error states, permissions, or validation timing confus
 
 ## Mobile and touch friction (expanded)
 
-Additional gesture-level and device-specific friction signals. These complement the existing `false_swipe`, `swipe_miss`, and `orientation_thrash` signals in the base mobile tier.
+Additional gesture-level and device-specific friction signals. These complement the existing `false_swipe`, `swipe_miss`, and `orientation_thrash` signals in the base mobile tier (there's only one `orientation_thrash` detector; it isn't repeated here).
 
 | Signal | What it means |
 |---|---|
 | `gesture_mismatch` | User performed a recognized gesture (pinch, rotate, two-finger scroll) on an element that doesn't support that gesture type. The element's visual affordance suggested a gesture vocabulary it doesn't actually handle. |
-| `orientation_thrash` | User rotated their device and the layout broke or reflowed in a way that caused immediate scroll correction or a rage tap. Distinct from the base `orientation_thrash` signal: this variant fires only when the rotation triggers a follow-up frustration signal within 3 seconds. |
 | `thumb_zone_miss` | User tapped a target in the top 20% of the screen (outside the natural thumb zone) and missed on the first attempt. They had to stretch or shift grip to reach it. Fires only when a second tap on the same target succeeds within 2 seconds. |
 | `mobile_keyboard_dismiss` | User tapped outside an input to dismiss the on-screen keyboard and accidentally triggered an action on the element behind it. The keyboard dismissed and a button or link underneath received the tap. |
 | `tap_target_adjacency` | User tapped between two adjacent interactive elements (less than 8px gap) and hit the wrong one, then immediately tapped the other. The targets are too close together. |
@@ -279,22 +286,19 @@ import { signal } from 'flusterduck'
 
 // A CTA that looks active but is gated by a required previous step
 signal('dead_click', {
-  selector: '[data-action="publish"]',
-  label: 'Publish',
-  blocked_by: 'missing_title',
+  element: '[data-action="publish"]',
+  metadata: { label: 'Publish', blocked_by: 'missing_title' },
 })
 
 // A custom multi-step flow step abandonment
 signal('form_abandonment', {
-  form: 'workspace-setup',
-  step: 'invite-members',
-  fields_touched: 0,
+  metadata: { form: 'workspace-setup', step: 'invite-members', fields_touched: 0 },
 })
 ```
 
-The first argument is the signal type: any of the 132 built-in types or a custom string. The second is optional metadata. Never include PII, form values, or anything a user typed.
+The first argument is a signal type from the 132 built-in list above (or one of the legacy aliases below). The second is `{ element?, metadata?, weight? }`; anything you want attached has to go under `metadata`, not at the top level. See [SDK Reference](/sdk) for the full signature. Never include PII, form values, or anything a user typed.
 
-Custom signal types appear in the dashboard and scoring engine alongside built-in types. They don't get tier weights assigned automatically. The scoring engine treats them as tier 2 by default until enough data accumulates for it to assess their actual impact.
+A name outside that list is accepted by the browser and sent, but doesn't score: it isn't a recognized signal type, so it never gets weighted, never shows up in a page's signal breakdown, and never clusters into an issue on its own. If you need a fully custom pattern scored and clustered like a built-in signal, use a Custom Monitor (Settings) instead, which ships as `custom_monitor` and does go through the full pipeline. Reuse a built-in type that's close enough and add your own context in `metadata` when you can; it's the difference between a signal that shows up on your dashboard and one that doesn't.
 
 ## Business events
 
@@ -341,4 +345,4 @@ These older signal names still work:
 
 Signals don't directly create issues. The scoring engine clusters signals by element, page, and user population. When a cluster crosses a confidence threshold, it becomes a UX issue. The confusion score for a page reflects the weighted sum of recent signals, normalized for session volume.
 
-Tier weighting means a single `rage_click` moves a page score more than a single `passive_drift`. But 200 `passive_drift` signals on the same element will create an issue regardless of tier: frequency overrides weight at scale.
+Every signal carries a weight (the number in each definition, 6 to 40), and that weight, not its tier, is what moves your page score: a single `rage_click` (weight 25) moves it more than a single `passive_drift` (weight 8). Tier is a rough, human-facing grouping of how much confidence a lone occurrence deserves, useful for reading the table above, but the tier number itself isn't what the scoring engine sums. And weight isn't the whole story either: 200 `passive_drift` signals on the same element will create an issue regardless of its low weight. Frequency overrides weight at scale.

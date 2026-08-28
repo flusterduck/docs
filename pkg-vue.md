@@ -34,6 +34,8 @@ const { track } = useFlusterduck()
 </template>
 ```
 
+See the [Vue guide](./vue) for the full option list.
+
 ## Links
 
 Published on npm as `@flusterduck/vue`. Install pulls the latest published version.

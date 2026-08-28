@@ -50,7 +50,7 @@ To confirm the connection without deploying, fire a test signal from the browser
 
 ```ts
 import { signal } from 'flusterduck'
-signal('dead_click', { selector: 'button[type="submit"]' })
+signal('dead_click', { element: 'button[type="submit"]' })
 ```
 
 If it shows up in Live signals, you're live.
@@ -78,7 +78,7 @@ NUXT_PUBLIC_FLUSTERDUCK_KEY=fd_pub_xxxxxxxxxxxx
 
 Within a few sessions of real traffic, you'll have confusion scores on your tracked pages. The first issues typically surface within 24-48 hours, once the scoring engine has enough signal clusters.
 
-The signals you'll see most in early data: `rage_click`, `dead_click`, and `form_abandonment`. They're the clearest indicators of friction and tend to accumulate quickly on any app with real users. No app has ever had zero.
+The signals you'll see most in early data: `rage_click`, `dead_click`, and `form_abandon`. They're the clearest indicators of friction and tend to accumulate quickly on any app with real users. No app has ever had zero.
 
 ## Where to go from here
 

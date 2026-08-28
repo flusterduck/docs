@@ -54,11 +54,13 @@ Calling it a second time is a no-op. A module-level `initialized` flag blocks re
 | `sampleRate` | `number` | `1.0` | `0.5` tracks half of sessions. |
 | `domMode` | `'off' \| 'metadata' \| 'snapshot'` | `'off'` | `'metadata'` captures element attributes. `'snapshot'` adds layout and computed styles. |
 | `cookieless` | `boolean` | `false` | Memory-only session IDs instead of cookies. |
-| `respectDoNotTrack` | `boolean` | `false` | Honor `navigator.doNotTrack`. |
+| `respectDoNotTrack` | `boolean` | `true` | Honor `navigator.doNotTrack`. Most teams pass `false`: Flusterduck captures no PII, and the default silently drops 30-50% of visitors on Firefox, Brave, and other privacy-focused browsers. |
 | `ignoreElements` | `string[]` | `[]` | CSS selectors to suppress signals on. |
 | `ignorePages` | `string[]` | `[]` | Page paths to skip. |
 | `segment` | `Record<string, string>` | - | Static tags on every event. |
 | `debug` | `boolean` | `false` | Verbose console logging. |
+| `batchInterval` | `number` | - | Milliseconds between flushes. Default flushes on idle and before unload. |
+| `elementImpressionSelectors` | `string[]` | - | CSS selectors to emit an impression signal when they enter the viewport. |
 
 `destroyFlusterduck()` tears down the SDK and resets the `initialized` flag. Use it in tests or if you're dynamically switching sites.
 
@@ -68,7 +70,7 @@ Calling it a second time is a no-op. A module-level `initialized` flag blocks re
 |---|---|---|
 | `initFlusterduck` | `(config: Config) => void` | Initialize the SDK. Call once. |
 | `destroyFlusterduck` | `() => void` | Tear down and reset. |
-| `signal` | `(name: string, data?: SignalData) => void` | Emit a friction signal manually. |
+| `signal` | `(name: string, data?: { element?: string; metadata?: Record<string, unknown>; weight?: number }) => void` | Emit a friction signal manually. |
 | `track` | `(name: string, metadata?: Record<string, unknown>) => void` | Track a business event. |
 | `identify` | `(segment: Record<string, string>) => void` | Tag the session with user properties. |
 | `setConsent` | `(consented: boolean) => void` | Pause or resume collection. |
@@ -145,7 +147,7 @@ Importing from `flusterduck` directly works just as well. Both go through the sa
 {/if}
 ```
 
-The `setConsent(false)` call before showing the banner pauses collection immediately. The user's choice then either resumes it or confirms the pause.
+The `setConsent(false)` call before showing the banner isn't a pause: it flushes anything the SDK already buffered since `initFlusterduck` ran, sends it, and tears the SDK down. `setConsent(true)` on accept starts a fresh session by calling `init()` again, it doesn't resume whatever was flushed on decline. If zero pre-consent collection is a hard requirement, don't call `initFlusterduck` until you have consent, rather than initializing and declining immediately after.
 
 ## Identifying users
 
@@ -199,8 +201,10 @@ Mount this inside whatever layout has access to your auth state. Pass an opaque 
 
 ## TypeScript
 
+`Config` is exported and typed. `signal()`'s second argument isn't, it's an inline shape, not a named export, so pass the object literal directly rather than importing a `SignalData` type that doesn't exist:
+
 ```ts
-import type { Config, SignalData } from 'flusterduck'
+import type { Config } from 'flusterduck'
 import { initFlusterduck, signal } from '@flusterduck/svelte'
 
 const config: Config = {
@@ -209,9 +213,8 @@ const config: Config = {
 }
 initFlusterduck(config)
 
-const data: SignalData = {
+signal('dead_click', {
   element: '[data-action="publish"]',
   metadata: { blocked_by: 'missing_required_fields', field_count: 3 },
-}
-signal('dead_click', data)
+})
 ```

@@ -62,7 +62,9 @@ Consent state doesn't survive page loads. Re-apply it from localStorage (or your
 ## enabled: false pattern
 
 ```tsx
-// app/layout.tsx or src/main.tsx
+// src/main.tsx
+import { FlusterduckProvider } from '@flusterduck/react'
+
 export function Root() {
   const [consented, setConsented] = useState(() =>
     localStorage.getItem('fd_consent') === 'true'
@@ -81,7 +83,7 @@ export function Root() {
 
 When `enabled` flips to `true`, the SDK initializes for the first time. There's no prior session, no prior buffer. The session starts at consent.
 
-For `useFlusterduck`:
+`FlusterduckProvider` ships in `@flusterduck/react` and works in any React app. In a Next.js App Router layout, use `useFlusterduck` from `@flusterduck/next` instead, since a server component can't render a client provider directly:
 
 ```tsx
 'use client'
@@ -113,16 +115,18 @@ For the strictest GDPR posture: use `enabled: false` before consent and `cookiel
 
 ## respectDoNotTrack
 
+On by default. At initialization the SDK checks `navigator.doNotTrack` and the Global Privacy Control signal (`navigator.globalPrivacyControl`). If either is set, `init()` stores your config and returns without starting collection, the same as never calling it.
+
+Turn it off with `respectDoNotTrack: false`, or `data-dnt="false"` on the script tag:
+
 ```ts
 init({
   key: process.env.NEXT_PUBLIC_FLUSTERDUCK_KEY!,
-  respectDoNotTrack: true,
+  respectDoNotTrack: false,
 })
 ```
 
-When set, the SDK checks `navigator.doNotTrack` at initialization. If it's `"1"`, the SDK doesn't initialize. Equivalent to never calling `init()`.
-
-Off by default. Most legal frameworks don't require honoring DNT. It's a browser preference signal, not a legal standard in most jurisdictions. Turn it on if your privacy policy commits to it.
+Most legal frameworks don't require honoring DNT or GPC, and Flusterduck never captures PII, form values, or typed text, so for a lot of teams the signal is more caution than the product needs. Brave ships Global Privacy Control on for every visitor, Firefox and several privacy extensions let people turn on Do Not Track with one setting, and in practice that adds up: honoring the signal silently drops 30-50% of visitors from your data. Other teams leave it on because DNT is exactly what the visitor asked for. Decide based on your own privacy policy, not ours.
 
 ## optOut()
 

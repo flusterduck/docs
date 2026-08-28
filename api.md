@@ -21,7 +21,7 @@ Authorization: Bearer fd_sec_your_key_here
 | Read API (`/query`) | 100 requests/minute per org |
 | Write API (`/manage`) | 30 requests/minute per org |
 
-Responses over the limit return `429` with a `Retry-After` header in seconds.
+Responses over the limit return `429` with a `reset_at` timestamp in `error.details` telling you when the window opens again.
 
 ## Response envelope
 
@@ -44,7 +44,7 @@ Failure:
 }
 ```
 
-`error.status` repeats the HTTP status code. An optional `error.details` field carries extra context when there is any. The examples below show the `data` payload; on the wire it always arrives inside this envelope.
+`error.status` repeats the HTTP status code. An optional `error.details` field carries extra context when there is any. Every success response is wrapped this way too, with your payload under `data` and `error` set to `null`. The read examples below show the full envelope; the write examples focus on the request body.
 
 ---
 
@@ -61,25 +61,29 @@ curl "https://api.flusterduck.com/v1/query/scores?site_id=your-site-id" \
 
 ```json
 {
-  "site": {
-    "site_id": "your-site-id",
-    "overall_score": 34.2,
-    "overall_trend": "up",
-    "pages": [
-      {
-        "page": "/checkout",
-        "score": 72,
-        "trend": "up",
-        "dominant_signal": "rage_click"
-      }
-    ],
-    "total_active_users": 1204,
-    "total_affected_users": 87
-  }
+  "data": {
+    "site": {
+      "site_id": "your-site-id",
+      "overall_score": 34.2,
+      "overall_trend": "up",
+      "pages": [
+        {
+          "page": "/checkout",
+          "score": 72,
+          "trend": "up",
+          "dominant_signal": "rage_click"
+        }
+      ],
+      "total_active_users": 1204,
+      "total_affected_users": 87
+    },
+    "duck_state": "watching"
+  },
+  "error": null
 }
 ```
 
-`trend` is `up`, `down`, or `stable` relative to the 7-day baseline.
+`trend` is `up`, `down`, or `stable` relative to the 7-day baseline. Each page row carries the full `page_scores` record, so it has more fields than shown here.
 
 ### GET /query/page
 
@@ -103,24 +107,27 @@ curl "https://api.flusterduck.com/v1/query/issues?site_id=your-site-id&status=op
 
 ```json
 {
-  "issues": [
-    {
-      "id": "9be2f9d4-...",
-      "title": "Dead clicks on upgrade CTA",
-      "page": "/pricing",
-      "element_selector": "[data-cta='upgrade']",
-      "signal_type": "dead_click",
-      "severity": "high",
-      "status": "open"
-    }
-  ],
-  "total": 1,
-  "offset": 0,
-  "limit": 20
+  "data": {
+    "issues": [
+      {
+        "id": "9be2f9d4-3c1a-4e8b-9d2f-6a7b5c4d3e2f",
+        "title": "Dead clicks on upgrade CTA",
+        "page": "/pricing",
+        "element_selector": "[data-cta='upgrade']",
+        "type": "dead_click",
+        "severity": "high",
+        "status": "open"
+      }
+    ],
+    "total": 1,
+    "offset": 0,
+    "limit": 20
+  },
+  "error": null
 }
 ```
 
-Status options: `open`, `triaged`, `in_progress`, `verified`, `resolved`, `ignored`, `regressed`
+The issue's friction category is `type` (values like `dead_click`, `rage_click`, `form_friction`), not `signal_type`. `severity` is `low`, `medium`, `high`, or `critical`. Each row carries the full issue record, so expect more fields than shown. Status options: `open`, `triaged`, `in_progress`, `verified`, `resolved`, `ignored`, `regressed`
 
 ### GET /query/issues/{issue_id}
 
@@ -165,11 +172,11 @@ Returns `deploys` (with `confusion_before` and `confusion_after` per deploy) plu
 Full event timeline for a session.
 
 ```bash
-curl "https://api.flusterduck.com/v1/query/session?site_id=your-site-id&session_id=ses_xxxxxxxxxxxx" \
+curl "https://api.flusterduck.com/v1/query/session?site_id=your-site-id&session_id=f3a9c1d24e8b76051a2b3c4d5e6f7081" \
   -H "Authorization: Bearer fd_sec_xxxx"
 ```
 
-Returns `session` (timing, device, pages visited, signal counts), `events` (every event in order), and a plain-language `narrative`.
+Session ids are 32-character hex strings, no prefix. Returns `session` (timing, device, pages visited, signal counts), `events` (every event in order), and a plain-language `narrative`.
 
 ### Other read endpoints
 
@@ -280,11 +287,13 @@ Errors use the same envelope as every response, with `data: null` and a populate
 
 `error.details` appears only when the error carries extra context (for example, which field failed validation).
 
-| Status | Code | Meaning |
+`error.code` is a stable string you can match on. It's specific to what went wrong, so one status can carry several codes. The common ones:
+
+| Status | Codes you'll see | Meaning |
 |---|---|---|
-| 400 | `invalid_input` | Missing required field or invalid value |
-| 401 | `unauthorized` | Missing, expired, or malformed key |
-| 403 | `forbidden` | Key doesn't have the required scope |
-| 404 | `not_found` | Resource doesn't exist or belongs to a different site |
-| 429 | `rate_limited` | Slow down. Check `Retry-After`. |
-| 500 | `server_error` | Something went wrong on our end |
+| 400 | `invalid_uuid`, `missing_site_id`, `invalid_status`, `empty_body`, `invalid_json` | Missing or malformed input |
+| 401 | `missing_auth`, `invalid_key`, `expired_key`, `invalid_jwt`, `jwt_required` | No valid credential |
+| 403 | `forbidden`, `missing_scope`, `insufficient_role`, `org_scope_required` | Authenticated, but not allowed to do this |
+| 404 | `not_found` | Resource doesn't exist or belongs to another site |
+| 429 | `rate_limited` | Too many requests. `error.details.reset_at` says when the window reopens |
+| 500 | `internal_error` | Something broke on our end |

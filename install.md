@@ -20,7 +20,7 @@ Want zero third-party runtime dependency, or run under a strict CSP that forbids
 
 ### Verifying locally
 
-Flusterduck treats non-user traffic as noise: events sent from `localhost` (or other dev hosts) and events from automated browsers are acknowledged but never stored, so a developer smoke-test (thanks Claude) can't burn your session quota, skew scores, or create phantom issues. To see events actually land while developing, add `data-env="development"` to the tag (or pass `environment: 'development'` to `init`), which stands those filters down and tags the traffic as development. Accepted names: `development`, `dev`, `test`, `testing`, `staging`, `local`. Remove the attribute before shipping. The [test-suite CLI](/testing) walks the whole verification for you.
+Flusterduck treats non-user traffic as noise: events sent from `localhost` (or other dev hosts) and events from automated browsers are acknowledged but never stored, so a developer smoke-test (thanks Claude) can't burn your session quota, skew scores, or create phantom issues. To see events actually land while developing, add `data-env="development"` to the tag (or pass `environment: 'development'` to `init`), which stands those filters down and tags the traffic as development. Accepted names: `development`, `dev`, `test`, `testing`, `staging`, `local`. Remove the attribute before shipping. The [test-suite CLI](./testing) walks the whole verification for you.
 
 ## Packages
 
@@ -101,8 +101,8 @@ The `fd_pub_` key is safe in client-side code. It can only send signals. It can'
 | `@flusterduck/next` | `FlusterduckScript` component + `useFlusterduck` hook for Next.js App Router and Pages Router. |
 | `@flusterduck/react` | `FlusterduckProvider` component + `useFlusterduck` hook. |
 | `@flusterduck/vue` | Vue 3 plugin + `useFlusterduck` composable. |
-| `@flusterduck/svelte` | SvelteKit module + Svelte store. |
-| `@flusterduck/nuxt` | Nuxt 3 module. Auto-initializes on the client. |
+| `@flusterduck/svelte` | SSR-safe `initFlusterduck()` / `destroyFlusterduck()` plus tracking functions, for calling from `onMount` in SvelteKit. No Svelte store. |
+| `@flusterduck/nuxt` | `createFlusterduckPlugin()` factory you export from a `plugins/*.client.ts` file, plus tracking composables. Doesn't initialize on its own; you wire the plugin file once. |
 
 ## Using the CLI instead
 

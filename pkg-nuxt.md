@@ -32,6 +32,8 @@ import { track } from '@flusterduck/nuxt'
 </template>
 ```
 
+See the [Nuxt guide](./nuxt) for the full option list.
+
 ## Links
 
 Published on npm as `@flusterduck/nuxt`. Install pulls the latest published version.

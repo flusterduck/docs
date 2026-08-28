@@ -42,6 +42,8 @@ signal('search_no_results', { query: 'pricing' })
 
 Use `setConsent(true)` to gate collection behind consent, or `optOut()` to stop collection for the current session.
 
+See the [SDK reference](./sdk) for every `init()` option and the full signal list.
+
 ## Links
 
 Published on npm as `flusterduck`. Install pulls the latest published version.

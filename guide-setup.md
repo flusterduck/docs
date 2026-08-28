@@ -2,6 +2,8 @@
 
 Guide ships as part of the core SDK. No separate package, no browser extension, no extra script tag. Enable it in your `init()` call and it's live.
 
+Guide is in preview. The Guide settings card (under Settings → AI) and the Guide page in your dashboard appear once an owner or admin turns on Experimental features in Settings → General.
+
 ## Enable Guide
 
 ```ts
@@ -131,25 +133,11 @@ Wire these to your own button, keyboard shortcut, or menu item if you want full 
 
 ### Mobile
 
-On touch devices, the floating button still appears. When Guide mode is active, a single tap on any element shows the explanation card. Tap elsewhere or tap the button again to dismiss. No hover required.
-
-Long-press also works as a trigger: the user holds on an element for 400ms and the explanation appears. This avoids interference with normal tap interactions.
+On touch devices, the floating button still appears. When Guide mode is active, a tap on an element shows its explanation card. Tap the button again to leave Guide mode. No hover required.
 
 ## Positioning the explanation card
 
-The explanation card appears near the cursor (or near the tapped element on mobile). It automatically flips to stay within the viewport. You don't need to configure positioning.
-
-If you want to constrain where the card can appear:
-
-```ts
-guide: {
-  enabled: true,
-  card: {
-    maxWidth: 320,       // pixels, default 320
-    offset: 12,          // gap between cursor and card edge
-  },
-}
-```
+The explanation card appears near the cursor (or near the tapped element on mobile) and automatically flips to stay within the viewport. There's nothing to configure.
 
 The card renders inside the same closed shadow root as the button. Your page styles don't affect it.
 
@@ -164,13 +152,13 @@ guide: {
 }
 ```
 
-Glob patterns work. `*` matches any single path segment. `**` matches any depth.
+Patterns are exact paths or trailing wildcards: `/checkout` matches only that path, `/onboarding/*` matches one level below it, `/onboarding/**` matches any depth below it, and a bare trailing `*` (as in `/docs*`) is a plain prefix match. Wildcards only work at the end of a pattern.
 
 On pages not in the list, the button and shortcut are both hidden. The SDK still detects friction signals normally; only the Guide UI is scoped.
 
 ## Server-side settings
 
-The snippet controls how the widget looks; the dashboard controls whether it answers. Under **Settings → Guide** you can:
+The snippet controls how the widget looks; the dashboard controls whether it answers. Under **Settings → AI** you can:
 
 - **Disable Guide entirely**: a real kill switch, enforced by the API. Requests are rejected server-side no matter what the client snippet asks for.
 - **Restrict the mode**, e.g. feedback-only: explanation requests get a `403 guide_explain_disabled` even if a stale snippet still asks for them.
@@ -228,13 +216,13 @@ Explanations are cached server-side per fingerprint, sanitized (no HTML, no URLs
 }
 ```
 
-`page` and `comment` (3–500 characters) are required; `selector` and `label` are optional. Response: `{ "data": { "received": true }, "error": null }`. Rate limited at 60/minute per site and 5 per 5 minutes per visitor IP.
+`page` and `comment` (3 to 500 characters) are required; `selector` and `label` are optional. Response: `{ "data": { "received": true }, "error": null }`. Rate limited at 60/minute per site and 5 per 5 minutes per visitor IP.
 
 ### Errors
 
 | Status | Code | Meaning |
 | --- | --- | --- |
-| 403 | `guide_disabled` | Guide is switched off in Settings → Guide |
+| 403 | `guide_disabled` | Guide is switched off in Settings → AI |
 | 403 | `guide_explain_disabled` | The site is in feedback-only mode |
 | 403 | `guide_feedback_disabled` | The site is in explain-only mode |
 | 403 | `guide_page_not_allowed` | The page isn't in the server-side allowlist |

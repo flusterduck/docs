@@ -22,11 +22,14 @@ If the AI allowance runs out, new filing pauses. Raw signals and known issue cou
 | `selector` | CSS selector of the affected element |
 | `signal_type` | Dominant signal type driving the cluster |
 | `signal_count` | Total signals in the cluster |
-| `severity` | 0-100 score based on signal tier, volume, page importance, and revenue exposure |
+| `severity` | `low`, `medium`, `high`, or `critical`. Derived from the page's confusion score, then capped by how many distinct users the issue actually reached, so a single-session blip can't read as critical |
 | `status` | Current lifecycle state |
 | `hypothesis` | Evidence-checked diagnosis; cause details are omitted when unsupported |
+| `revenue_impact` | Estimated monthly cost, when Settings > Revenue has a monthly revenue or average order value configured. See [Revenue impact](./revenue) |
 | `sessions` | Session IDs containing this friction pattern |
 | `verifications` | Deploy-correlated verification records |
+
+Severity is a volume-checked label, not a raw number. The scoring engine derives it from the page's confusion score (80+ is `critical`, 60+ is `high`, 35+ is `medium`, below that is `low`), then clamps it down based on how many distinct users the cluster actually reached: one affected user caps at `medium`, two to four cap at `high`, and only five or more can read `critical`. A page can score 90 from a single unlucky session; the cap keeps that from reading as your worst problem. The clamp is skipped for a hard technical failure (a captured JS error or 5xx response), since a single user hitting a real server error is worth escalating regardless of reach.
 
 ## Issue lifecycle
 
@@ -36,11 +39,19 @@ If the AI allowance runs out, new filing pauses. Raw signals and known issue cou
 
 **`in_progress`**: someone is actively working a fix. This prevents duplicate effort when multiple engineers are looking at the same issue list.
 
+**`resolved`**: you've shipped a fix and marked it done. This is a claim, not a confirmation. The next deploy's verification cycle checks whether the friction pattern actually declined and moves the issue to `verified` or `regressed` accordingly. Issues sitting in `resolved` without a deploy behind them stay `resolved` until one arrives.
+
 **`verified`**: the issue was resolved and the scoring engine confirmed the fix held after the next deploy. The friction pattern didn't return.
 
 **`regressed`**: the issue was resolved, but fresh investigation found the problem again. Reopening uses the same cited-session and claim checks as every other AI issue update.
 
 **`ignored`**: known issue, won't fix. Alert rules won't fire for ignored issues, and they won't count toward your open issue total. Use this deliberately, not as a way to clear your queue.
+
+You can set an issue's status to `triaged`, `in_progress`, `resolved`, `verified`, or `ignored` directly. `regressed` is set automatically, by the verification cycle, never by hand.
+
+### Duplicate and merged issues
+
+The engine occasionally finds that two issues describe the same underlying friction, usually after a cluster splits or reforms across a deploy. When that happens, one issue absorbs the other: the survivor keeps the evidence and history, and the absorbed issue gets a `merged_into` pointer to the survivor's id. A merged issue stops appearing in your open issue list and stops counting toward alerts or revenue totals on its own; look at the issue it points to instead.
 
 ### Moving issues forward
 
@@ -66,16 +77,19 @@ Mark issue iss_xxxxxxxxxxxx as in_progress and assign it to alex.
 
 ## Severity scoring
 
-Severity (0-100) reflects how much a specific issue is hurting your users. Higher severity means more sessions affected, higher-tier signals, more revenue exposure.
+Severity starts as a read of the page's confusion score at the moment the cluster formed: 80+ maps to `critical`, 60+ to `high`, 35+ to `medium`, anything below that to `low`. The page score already bakes in signal tier, volume, and 14-day recency decay, so severity inherits all of that for free instead of recomputing it.
 
-It incorporates:
-- Signal tier of the dominant signal type
-- Signal volume and percentage of sessions affected
-- Page importance (checkout and pricing have higher baseline weights)
-- Revenue exposure (whether conversion events were tracked near this element in affected sessions)
-- Recency (signals from the last 48 hours weight more than older ones)
+That first pass is then capped by how many distinct users the cluster actually reached, because a page score is an intensity, not a headcount, and a single confused visitor can push a low-traffic page's score into the 80s on its own:
 
-Use severity for relative prioritization within your open issue list. Don't treat it as an absolute scale. A severity 40 issue on /checkout probably matters more than a severity 70 issue on your admin changelog page.
+| Distinct affected users | Severity ceiling |
+|---|---|
+| 1 | `medium` |
+| 2-4 | `high` |
+| 5+ | `critical` (uncapped) |
+
+A hard technical failure, a captured JavaScript error or a 5xx response, skips the cap: one user hitting a real server error on checkout is still worth escalating even if nobody else has hit it yet.
+
+Use severity for relative prioritization within your open issue list, not as a page-independent scale. A `medium` issue on `/checkout` probably matters more than a `high` issue on your admin changelog page.
 
 ## Verification
 
@@ -128,7 +142,7 @@ curl "https://api.flusterduck.com/v1/issues?status=open" \
       "selector": "button[type='submit']",
       "signal_type": "dead_click",
       "signal_count": 47,
-      "severity": 84,
+      "severity": "critical",
       "status": "open",
       "created_at": "2026-06-08T11:30:00Z"
     }

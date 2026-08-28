@@ -71,7 +71,9 @@ identify({ user_id: 'alice@example.com' })
 identify({ name: 'Alice Johnson' })
 ```
 
-Flusterduck doesn't validate what you pass. That's your responsibility.
+The browser backstops this: any key that reads as a contact field (`email`, `phone`, `address`, `name`, and similar) is dropped, and any value shaped like an email address or a phone-length digit run is dropped too. Pass a bare string instead of an object, like `identify('usr_8f3a2c91')`, and the same check applies: anything containing `@` or a long digit run is refused.
+
+That catches the obvious cases, not the subtle ones. A value that doesn't look like PII to a regex, an internal username, a full postal code, can still identify someone, so choosing opaque values stays your responsibility.
 
 ## Consent and opt-out
 

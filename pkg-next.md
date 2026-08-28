@@ -27,20 +27,29 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
 ```
 
 ```tsx
-// A client component.
+// A client component. FlusterduckScript loads the SDK onto window, so
+// consent controls read that same instance instead of importing the SDK
+// again (a separate useFlusterduck() init would create a second SDK
+// instance, since the script build and the npm build don't share state).
 'use client'
-import { useFlusterduck } from '@flusterduck/next'
+
+declare global {
+  interface Window {
+    flusterduck?: { setConsent: (consented: boolean) => void; optOut: () => void }
+  }
+}
 
 export function ConsentToggle() {
-  const { setConsent, optOut } = useFlusterduck()
   return (
     <>
-      <button onClick={() => setConsent(true)}>Allow</button>
-      <button onClick={() => optOut()}>Opt out</button>
+      <button onClick={() => window.flusterduck?.setConsent(true)}>Allow</button>
+      <button onClick={() => window.flusterduck?.optOut()}>Opt out</button>
     </>
   )
 }
 ```
+
+If you're initializing with `useFlusterduck` instead of `FlusterduckScript`, call the hook again with the same key in the deeper component: it returns `{ signal, track, identify, setConsent, optOut }` and re-init is a no-op. See the [Next.js guide](./next) for both paths.
 
 ## Links
 

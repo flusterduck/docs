@@ -50,9 +50,9 @@ Every endpoint enforces rate limits through an atomic, database-backed counter. 
 | Read API | 100 requests (or per-key custom RPM) | 60 seconds, per org + caller |
 | Write API | 30 requests | 60 seconds, per actor |
 | Waitlist | 5 requests | 15 minutes, per IP |
-| Webhook delivery | 60 requests | 60 seconds |
+| Inbound webhooks (Linear, GitHub, deploy events, Slack) | 60 requests | 60 seconds, per source |
 
-API keys can carry a custom per-key limit, which replaces the default on the read API.
+API keys can carry a custom per-key limit, which replaces the default on the read API. Event ingestion also carries a lower per-IP ceiling of 1,200 requests per 60 seconds ahead of the per-environment limit, so a single abusive source can't burn through a site's shared quota, or the database lookups behind it, before its publishable key is even checked.
 
 ## Cryptography
 

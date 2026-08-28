@@ -96,4 +96,4 @@ The engine needs a floor of sessions in **each** cohort before it will make a co
 
 ## Relationship to revenue impact
 
-The conversion trigger and [Revenue impact](./revenue) are complementary. Revenue impact attaches dollar figures to individual open issues using the `amount_cents` you pass. The confused-vs-calm insight is the broader, site-wide picture: it doesn't need dollar amounts (only a conversion event) to show that confusion is depressing conversions and where. Wire the conversion event once and both get sharper.
+The conversion trigger and [Revenue impact](./revenue) are complementary, and both read the same `revenue_config` on the site's SDK config. Revenue impact prices individual open issues (using a conversion-benchmark rate, sharpened by the revenue numbers you configure) and finds session-level intent-vs-realized leaks. The confused-vs-calm insight here is the broader, site-wide picture: it doesn't need dollar amounts, only a conversion event, to show that confusion is depressing conversions and where. Set the conversion event once and all of it gets sharper.

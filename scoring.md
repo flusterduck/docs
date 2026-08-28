@@ -38,32 +38,40 @@ New pages don't have a baseline until they've accumulated 7 days of data. During
 
 ## Confusion budgets
 
-A confusion budget is an absolute ceiling for a specific page. Set it and forget it. When the page crosses that number, a `budget` alert fires regardless of whether the score changed recently.
+A confusion budget is an absolute ceiling for a specific page, tracked over a rolling period (daily, weekly, or monthly). Instead of asking "did the score spike," it asks "how much of the period did this page spend over the line."
 
-Budgets are set per-page in the dashboard under Settings > Alert Rules, or via the API:
+Two numbers control a budget, and they're not the same thing:
+
+- `config.target_score` is the ceiling itself, the ordinary 0-100 score a page shouldn't sit above. Defaults to 50.
+- `threshold` is the burn percentage that fires the alert: how much of the period the page has to have spent above `target_score` before you hear about it. Defaults to 70.
+
+Set both in the dashboard under Settings > Alert Rules, or via the API:
 
 ```json
 {
   "trigger_type": "budget",
-  "threshold": 50,
+  "threshold": 70,
+  "config": { "target_score": 50, "period": "weekly" },
   "page_pattern": "/checkout*",
   "channels": ["email", "pagerduty"],
   "name": "Checkout budget"
 }
 ```
 
-Most teams set budgets on their highest-value pages. Reasonable starting numbers:
+That rule fires once `/checkout*` has spent 70% of the current week above a score of 50. `period` is `daily`, `weekly`, or `monthly` (default weekly).
 
-| Page | Budget |
+Most teams set the target score tighter on their highest-value pages. Reasonable starting ceilings:
+
+| Page | Target score |
 |---|---|
 | Checkout | 50 |
 | Pricing | 45 |
 | Onboarding | 40 |
 | Account/billing settings | 35 |
 
-These are starting points, not rules. Set them based on your own baseline data once you've been running for a few weeks.
+These are starting points, not rules. Set them based on your own baseline data once you've been running for a few weeks. Leave `threshold` at 70 unless you want the alert to wait longer (closer to 100, only fires once the budget is nearly exhausted) or fire sooner (closer to 0).
 
-The budget concept is simpler than anomaly detection. You don't need historical data. You're just defining what "too broken" looks like for a specific page.
+The budget concept is simpler than anomaly detection. You don't need historical baseline data for it to work. You're just defining what "too broken, for too long" looks like for a specific page.
 
 ## Score interpretation
 

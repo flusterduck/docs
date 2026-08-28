@@ -1,6 +1,8 @@
 # Build Plugins
 
-The Vite and webpack plugins handle deploy tagging and source map upload at build time. You don't need them to use Flusterduck. Add them when you want automatic deploy recording from your build pipeline or when you want stack traces in issue evidence to resolve to original source.
+`flusterduck-vite-plugin` and `flusterduck-webpack-plugin` do one thing: inject the Flusterduck script tag into your built HTML automatically, so you don't hand-edit `index.html`. That's the whole feature. They don't record deploys, upload source maps, or talk to your Flusterduck account at build time. They ship an `fd_pub_` key into your HTML, same as pasting the tag yourself.
+
+If you're on Next.js, React, Vue, Svelte, or Nuxt with a framework wrapper, skip this page. `@flusterduck/react`, `@flusterduck/next`, `@flusterduck/vue`, `@flusterduck/svelte`, and `@flusterduck/nuxt` already handle this and do more (hooks, SSR safety, `setConsent`). These build plugins are for a plain Vite or webpack app that isn't using one of those, and would otherwise paste the script tag into a static HTML template by hand.
 
 ## Vite
 
@@ -16,11 +18,13 @@ import { flusterduck } from 'flusterduck-vite-plugin'
 export default defineConfig({
   plugins: [
     flusterduck({
-      secretKey: process.env.FLUSTERDUCK_SECRET_KEY,
+      apiKey: process.env.VITE_FLUSTERDUCK_KEY,
     }),
   ],
 })
 ```
+
+The plugin hooks Vite's `transformIndexHtml` and appends the script tag to `<head>` in every HTML entry point at build time. Run `vite build` and check the output `dist/index.html`: you'll see a `<script src="https://cdn.jsdelivr.net/npm/flusterduck@0/...">` tag with your key baked in as `data-key`.
 
 ## webpack
 
@@ -30,129 +34,56 @@ pnpm add -D flusterduck-webpack-plugin
 
 ```js
 // webpack.config.js
-const { FlusterduckPlugin } = require('flusterduck-webpack-plugin')
+const FlusterduckPlugin = require('flusterduck-webpack-plugin')
 
 module.exports = {
   plugins: [
     new FlusterduckPlugin({
-      secretKey: process.env.FLUSTERDUCK_SECRET_KEY,
+      apiKey: process.env.FLUSTERDUCK_KEY,
     }),
   ],
 }
 ```
 
-Both plugins accept the same options. The examples below use Vite syntax, but the options are identical for webpack.
+`flusterduck-webpack-plugin` exports the plugin class directly (`export = FlusterduckWebpackPlugin`), not a named export, so `require('flusterduck-webpack-plugin')` (or `import FlusterduckPlugin from 'flusterduck-webpack-plugin'` with `esModuleInterop`) gives you the class itself.
+
+If `html-webpack-plugin` is in your config, the plugin taps its `alterAssetTagGroups` hook and adds the script to the generated head tags. Without it, the plugin scans the assets webpack emits and injects the tag directly into any `.html` output, so it works either way.
 
 ## Options
 
+Both plugins take the same shape.
+
 | Option | Type | Default | Description |
 |---|---|---|---|
-| `secretKey` | `string` | required | Your `fd_sec_` secret key. Never expose this client-side. |
-| `release` | `string` | git SHA | Version string attached to the deploy record. Defaults to `git rev-parse HEAD`. |
-| `environment` | `string` | `NODE_ENV` | `"production"`, `"staging"`, `"development"` |
-| `sourceMaps` | `boolean` | `true` | Upload source maps after build. |
-| `deleteSourceMaps` | `boolean` | `false` | Delete uploaded source maps from the output directory after upload. |
-| `include` | `string[]` | `["dist"]` | Directories to scan for source map files. |
-| `dryRun` | `boolean` | `false` | Run the plugin without uploading or recording a deploy. Useful for verifying config. |
+| `apiKey` | `string` | required | Your `fd_pub_` publishable key. Not a secret key: this ends up in client-side HTML, same as the manual script tag. |
+| `publishableKey` | `string` | - | Alias for `apiKey`. Use whichever name reads better in your config. |
+| `environment` | `string` | - | `"production"`, `"staging"`, `"development"`. Maps to `data-env` on the injected tag. |
+| `debug` | `boolean` | `false` | Verbose console logging from the SDK. Maps to `data-debug`. |
+| `cookieless` | `boolean` | `false` | Memory-only session IDs instead of cookies. Maps to `data-cookieless`. |
+| `sampleRate` | `number` | - | Fraction of sessions to track (0 to 1). Maps to `data-sample`. |
+| `dnt` | `boolean` | `false` | Respect the browser's Do Not Track signal. Defaults to `false` (DNT is ignored) because Flusterduck captures no PII and respecting DNT by default silently drops 30-50% of visitors on privacy-focused browsers. Pass `dnt: true` to opt back into honoring it. Maps to `data-dnt`. |
+| `scriptSrc` | `string` | jsdelivr-hosted bundle | Override the script source URL. Use this if you're self-hosting the SDK bundle behind your own CDN or under a strict CSP. |
+| `enabled` | `boolean` | `true` | Set to `false` to skip injection entirely, for example in a local dev build where you don't want tracking. |
 
-## Deploy recording
+Passing a secret key (`fd_sec_`) in `apiKey` or `publishableKey` logs a console error at build time and the plugin injects nothing. There's no way to leak a secret key into your bundle through this plugin.
 
-The plugin records a deploy automatically when the build completes. You don't need the CI curl command from [Deploy Correlation](./deploy-correlation) if you're using the build plugin. Use one or the other, not both.
+## What actually gets injected
 
-```ts
-flusterduck({
-  secretKey: process.env.FLUSTERDUCK_SECRET_KEY,
-  release: process.env.VITE_APP_VERSION || 'unknown',
-  environment: 'production',
-})
+Given the Vite config above, the output is a script tag equivalent to:
+
+```html
+<script
+  src="https://cdn.jsdelivr.net/npm/flusterduck@0/dist/d.global.js"
+  data-key="fd_pub_xxxxxxxxxxxx"
+  data-dnt="false"
+  async
+></script>
 ```
 
-The plugin POSTs to `/v1/deploys` at the end of the build with `version` set to `release` and `environment` set accordingly. `confusion_before` is captured at that moment.
+The plugin never injects the same `scriptSrc` twice into one document, so re-running the build or nesting multiple HTML entry points won't double-track visitors.
 
-## Source maps
+## Deploy tagging and source maps
 
-When `sourceMaps: true` (the default), the plugin uploads `.map` files after the build. Issue evidence in the dashboard will show original file names and line numbers instead of minified bundle references.
+These plugins don't do either. If you're looking for `confusion_before`/`confusion_after` on your releases, that's [Deploy Correlation](./deploy-correlation): connect your GitHub repo and Flusterduck detects deploys automatically, or call the `/v1/deploys` API from CI with a `fd_sec_` key. Neither requires a build plugin.
 
-Source maps are uploaded to Flusterduck's servers and stored against the `release` version string. They're used only to resolve stack traces in issue evidence. They aren't accessible from the client.
-
-### Keeping source maps off your CDN
-
-Set `deleteSourceMaps: true` to remove map files from the output directory after upload. They'll be used for stack trace resolution but won't be served to browsers or end up in your CDN cache.
-
-```ts
-flusterduck({
-  secretKey: process.env.FLUSTERDUCK_SECRET_KEY,
-  sourceMaps: true,
-  deleteSourceMaps: true,
-})
-```
-
-### Including only specific directories
-
-```ts
-flusterduck({
-  secretKey: process.env.FLUSTERDUCK_SECRET_KEY,
-  include: ['dist/assets'],
-})
-```
-
-## Environment variable setup
-
-Store `FLUSTERDUCK_SECRET_KEY` in your build environment, not in your codebase. The secret key should never appear in client bundles.
-
-For local development, add it to `.env.local` (which your `.gitignore` should exclude):
-
-```bash
-# .env.local
-FLUSTERDUCK_SECRET_KEY=fd_sec_xxxxxxxxxxxx
-```
-
-In CI, add it as an environment secret:
-- GitHub Actions: Settings > Secrets > Actions > New repository secret
-- Vercel: Project Settings > Environment Variables
-- Netlify: Site settings > Build > Environment variables
-
-## Dry run
-
-Verify plugin configuration without uploading anything:
-
-```ts
-flusterduck({
-  secretKey: process.env.FLUSTERDUCK_SECRET_KEY,
-  dryRun: process.env.NODE_ENV !== 'production',
-})
-```
-
-With `dryRun: true`, the plugin logs what it would upload and what deploy record it would create, then exits without sending any requests. Useful for testing your config in staging before enabling in production.
-
-## Next.js
-
-Next.js uses webpack under the hood. Use the webpack plugin in `next.config.js`:
-
-```js
-// next.config.js
-const { FlusterduckPlugin } = require('flusterduck-webpack-plugin')
-
-/** @type {import('next').NextConfig} */
-const nextConfig = {
-  webpack: (config, { isServer, buildId }) => {
-    if (!isServer) {
-      config.plugins.push(
-        new FlusterduckPlugin({
-          secretKey: process.env.FLUSTERDUCK_SECRET_KEY,
-          release: buildId,
-          environment: process.env.NODE_ENV,
-          deleteSourceMaps: true,
-        })
-      )
-    }
-    return config
-  },
-}
-
-module.exports = nextConfig
-```
-
-Scope it to `!isServer` to avoid running the plugin twice per build (Next.js runs separate webpack compilations for client and server).
-
-Use `buildId` as the release version. Next.js generates a stable, unique build ID per deployment.
+There's no source map upload feature in the SDK or these plugins today. If your build already uploads source maps to a symbolication service (Sentry, Bugsnag, etc.), that's independent of Flusterduck and unaffected by adding this plugin.

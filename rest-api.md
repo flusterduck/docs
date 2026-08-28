@@ -50,7 +50,7 @@ GET /query/issues?site_id={id}&status=open&limit=20
 GET /query/issues/{issue_id}?site_id={id}
 ```
 
-List or fetch individual UX issues. Filter by status: `open`, `triaged`, `in_progress`, `verified`, `resolved`, `ignored`.
+List or fetch individual UX issues. Filter by status: `open`, `triaged`, `in_progress`, `verified`, `resolved`, `ignored`, `regressed`.
 
 ### Alerts
 
@@ -299,7 +299,7 @@ PATCH  /manage/alert-rules/{id}  { threshold, channels, enabled }
 DELETE /manage/alert-rules/{id}
 ```
 
-Trigger types: `spike`, `anomaly`, `new_page`, `trend`, `co_occurrence`, `positive`, `budget`.
+Trigger types: `spike`, `anomaly`, `new_page`, `trend`, `co_occurrence`, `positive`, `budget`, `revenue_threshold`, `stalled_signups`.
 Channels: `email`, `slack`, `webhook`, `mcp`, `pagerduty`.
 
 ### Issues

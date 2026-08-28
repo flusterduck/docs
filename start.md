@@ -40,18 +40,17 @@ Don't wait until users complain. Set up a spike alert for your most critical pag
 
 Both take 2 minutes to configure under Settings > Alert Rules. Route the spike alert to Slack or email. Add PagerDuty to the budget alert if the page is critical enough.
 
-## Tag your deploys
+## Record your deploys
 
-When you ship a fix, tag the deploy with a version string:
+When you ship a fix, tell Flusterduck a deploy happened. That's what triggers the before/after comparison. Run this from CI:
 
-```ts
-init({
-  key: process.env.NEXT_PUBLIC_FLUSTERDUCK_KEY!,
-  segment: { app_version: '2026.06.10' },
-})
+```bash
+npx flusterduck deploy notify --site <site_id> --key fd_sec_xxxxxxxxxxxx
 ```
 
-Flusterduck records the confusion score before and after each tagged deploy. This is how you confirm a fix worked: the scoring engine shows you the before/after delta and verifies that the affected issues actually resolved.
+It auto-detects the commit hash, message, and author on GitHub Actions, Vercel, GitLab, and Bitbucket, so a bare call with no flags works in most pipelines. Use `--commit`, `--message`, and `--author` to override, and `--env` if you're deploying somewhere other than production.
+
+Flusterduck captures the confusion score at the moment of the deploy, then again once the deploy is a few minutes old. This is how you confirm a fix worked: the scoring engine shows you the before/after delta and verifies that the affected issues actually resolved. If you're on GitHub, deploys are often detected automatically from your deployment history, but calling `deploy notify` explicitly is the reliable path and works with any host.
 
 ## Connect your AI assistant
 

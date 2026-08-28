@@ -12,7 +12,7 @@ Powerful software loses users at the moment of confusion. Someone opens a dashbo
 
 That fear is the thing. The task isn't hard. The not-knowing is.
 
-Flusterduck's detection engine already identifies exactly where this happens. It watches 34 behavioral signals across thousands of sessions and clusters them into ranked friction points. Guide takes that data and does something about it on the spot: explains the confusing thing before the user gives up.
+Flusterduck's detection engine already identifies exactly where this happens. It watches 132 behavioral signals across thousands of sessions and clusters them into ranked friction points. Guide takes that data and does something about it on the spot: explains the confusing thing before the user gives up.
 
 ## How it fits into what you already run
 

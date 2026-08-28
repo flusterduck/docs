@@ -31,6 +31,8 @@ import { track } from '@flusterduck/svelte'
 track('checkout_completed', { value: 49 })
 ```
 
+See the [SvelteKit guide](./svelte) for the full option list.
+
 ## Links
 
 Published on npm as `@flusterduck/svelte`. Install pulls the latest published version.

@@ -6,17 +6,18 @@ This page maps the full data flow for teams doing compliance reviews, integratio
 
 ## The pipeline
 
-Every piece of friction data moves through five stages:
+Every piece of friction data moves through these stages:
 
 1. **SDK** collects behavioral signals in the browser
 2. **ingest** validates, deduplicates, and stores events
 3. **compute-scores** calculates per-page confusion scores
-4. **process-issues** clusters signals into UX issues
-5. **process-alerts** evaluates alert rules and queues notifications
+4. **process-issues** clusters signals, refreshes evidence on known issues, and (only on sites that have turned AI detection off) mints new issues from clusters directly
+5. **ai-detect** is the default path for minting new issues: a nightly investigating agent that reads a night's sessions, opens the ones that look promising, and can only file an issue once its evidence passes server-side checks
+6. **process-alerts** evaluates alert rules and queues notifications
 
 After alerts fire, two delivery paths carry notifications out: the **webhooks** function delivers signed HTTP payloads to your endpoints, and the **slack** function handles slash commands and interactive buttons.
 
-A sixth function, **deploy-correlation**, sits outside the main pipeline. It records deploys and captures before/after confusion snapshots so the engine can verify whether a fix worked.
+Another function, **deploy-correlation**, sits outside the main pipeline. It records deploys and captures before/after confusion snapshots so the engine can verify whether a fix worked.
 
 ## How data enters
 
@@ -72,20 +73,28 @@ After scoring, `compute-scores` also back-fills `confusion_after` on recent depl
 
 ## process-issues
 
-Runs on a 60-minute window. This is where individual signals become actionable issues.
+Runs on a 60-minute window. It clusters signals by a composite key: `page + signal_type + element`. A cluster qualifies for issue treatment when it spans at least 2 distinct sessions, or when it's a captured technical failure (a JavaScript error or 5xx response) on a page whose confusion score is 60 or higher, in which case a single session is enough. A handful of clicks from one visitor is not an issue; the same friction hitting two different people, or a hard error on a page that already matters, is.
 
-The function clusters signals by a composite key: `page + signal_type + element`. If a cluster has at least 3 fires or spans 2+ sessions, it becomes a UX issue.
-
-For each cluster, process-issues:
+For each qualifying cluster, process-issues:
 
 1. Generates a fingerprint hash from `site_id:page:signal:element`
 2. Looks up existing open issues with the same fingerprint
-3. Updates the existing issue if found, or creates a new one
+3. Updates the existing issue's counters, evidence, and receipts if one is found
 4. Calculates issue confidence from signal count, session breadth, and per-fire confidence
 5. Estimates revenue impact using the site's revenue config (if `track()` is wired)
 6. Writes signal evidence rows linking the issue to its source events
 
+Whether it can also **create** a new issue depends on a per-site setting. AI detection (`ai_detect_enabled`, on by default) makes the AI investigator described below the sole authority on minting new customer-visible issues; process-issues then only refreshes counters and evidence on issues that already exist. If a site has turned AI detection off, process-issues mints new issues itself from qualifying clusters, using the same fingerprint-based dedup.
+
 Issues have a lifecycle: `open`, `triaged`, `in_progress`, `verified`, `resolved`, `ignored`, `regressed`. If new signals match an issue that was previously `verified`, its status flips to `regressed`. That's how you know a fix didn't hold.
+
+## ai-detect
+
+The default engine behind new issues. Once a night (and on demand from Settings, then AI), it reads a compressed brief of the site's recent sessions and decides what's worth investigating. For anything promising, it opens the actual sessions, checks page context, deploy timing, and cursor evidence, and can request a bounded, logged-out, read-only browser check of the live page when the current visible state matters.
+
+It can only file an issue after clearing a real evidence bar: at least two sessions it actually opened, any cited detector signal verified as having occurred in those sessions, and severity clamped by how many users the evidence shows were actually affected. One angry session never becomes an issue on its own. If code evidence is connected for the site, the analyst can also search the repository and cite a file and line behind a diagnosis, pinned to the exact commit that was live when the friction happened.
+
+AI detection runs inside your plan's AI allowance with no separate bill. If a site turns it off, process-issues falls back to minting issues from cluster thresholds directly, with no AI review of the evidence. See the [AI detection](./ai-detection) page for the full picture of what it can and can't see.
 
 ## process-alerts
 
@@ -100,6 +109,10 @@ Evaluates alert rules against the latest page scores. Each rule has a trigger ty
 | `new_page` | Page has no baseline and score exceeds threshold |
 | `co_occurrence` | Multiple users affected and count exceeds threshold |
 | `positive` | Score drops below threshold (for tracking improvements) |
+| `revenue_threshold` | Estimated revenue at risk across open issues crosses a dollar amount you set |
+| `stalled_signups` | Visitors hit friction on an activation path and left without converting, above a count you set |
+
+The first seven are per-page rules: they evaluate against one page's score. `revenue_threshold` and `stalled_signups` are site-level: they look at totals across the whole site rather than a single page.
 
 Before firing, the function claims a cooldown lock using an atomic database RPC. Two overlapping runs can't fire the same alert twice. Cooldown is configurable per rule, from 1 minute to 24 hours.
 
@@ -201,6 +214,12 @@ Browser SDK
     |
     v
 [process-alerts] --> alerts table, alert_delivery_queue, webhook_deliveries
+
+[ai-detect] runs on its own nightly schedule (and on demand), reading
+sessions and signals independently, and writes new issues into the
+same ux_issues table. On sites with AI detection on (the default),
+it is the only thing that mints a new issue; process-issues only
+refreshes counters and evidence on issues that already exist.
     |                   |
     +-------------------+
     |                   |

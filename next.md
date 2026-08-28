@@ -66,12 +66,16 @@ Renders a `next/script` tag with `strategy="afterInteractive"`. Doesn't block re
 | `environment` | `string` | - | `"production"`, `"staging"`, `"development"` |
 | `sampleRate` | `number` | `1.0` | `0.5` tracks half of sessions. |
 | `cookieless` | `boolean` | `false` | Use memory-only session IDs instead of cookies. |
+| `respectDoNotTrack` | `boolean` | `true` | Honor `navigator.doNotTrack`. Most teams pass `false`: Flusterduck captures no PII, and the default silently drops 30-50% of visitors on Firefox, Brave, and other privacy-focused browsers. |
+| `domMode` | `'metadata' \| 'snapshot'` | `'off'` | `'metadata'` captures element attributes with each signal. `'snapshot'` adds computed layout and styles. |
+| `compression` | `'auto' \| 'off'` | `'auto'` | Pass `'off'` to disable gzip batching. `'auto'` is the default either way, so it's only worth setting when you want `'off'`. |
+| `endpoint` | `string` | - | Self-hosted ingest endpoint, for teams proxying or self-hosting collection. |
 | `debug` | `boolean` | `false` | Logs every signal and flush to the console. |
 | `segment` | `Record<string, string>` | - | Key/value pairs attached to every event. Use for deploy tagging, A/B variants, feature flags. |
 
-`domMode`, `ignoreElements`, `batchInterval`, and other advanced options aren't available on `FlusterduckScript`. It's a script tag, not a programmatic init call. Use `useFlusterduck` if you need them.
+That's the full prop list `FlusterduckScript` accepts, it's a script tag with `data-*` attributes underneath, not a wrapper around the whole `Config` type. `ignoreElements`, `batchInterval`, `elementImpressionSelectors`, `onSignal`, and other programmatic-only options aren't available here. Use `useFlusterduck` if you need them.
 
-Passing a secret key (`fd_sec_`) logs an error in development and renders nothing in production.
+Passing a secret key (`fd_sec_`) logs an error in development and renders nothing in either environment.
 
 ## useFlusterduck
 
@@ -100,7 +104,7 @@ Everything from the core `Config` type plus `enabled`:
 | `sampleRate` | `number` | `1.0` | Fraction of sessions to track. |
 | `domMode` | `'off' \| 'metadata' \| 'snapshot'` | `'off'` | `'metadata'` captures element attributes. `'snapshot'` adds layout and computed styles. |
 | `cookieless` | `boolean` | `false` | Memory-only session IDs instead of cookies. |
-| `respectDoNotTrack` | `boolean` | `false` | Honor `navigator.doNotTrack`. |
+| `respectDoNotTrack` | `boolean` | `true` | Honor `navigator.doNotTrack`. Most teams pass `false`: Flusterduck captures no PII, and the default silently drops 30-50% of visitors on Firefox, Brave, and other privacy-focused browsers. |
 | `ignoreElements` | `string[]` | `[]` | CSS selectors to suppress signals on. Useful for admin overlays or debug panels. |
 | `ignorePages` | `string[]` | `[]` | Page paths to skip. Match is prefix-based. |
 | `segment` | `Record<string, string>` | - | Static tags on every event. |
@@ -158,7 +162,7 @@ Core SDK functions buffer until the SDK is ready. Calling them before initializa
 
 ## Consent flow
 
-The recommended pattern: initialize the SDK, call `setConsent(false)` before showing your banner, then flip it based on the user's choice. Collection is paused until they respond.
+The common pattern: initialize the SDK, call `setConsent(false)` before showing your banner, then flip it based on the user's choice. This doesn't hold data in a paused state, it means the SDK captured whatever happened between `FlusterduckScript` initializing and your banner's effect running, then that gets flushed and sent the moment `setConsent(false)` fires, and the SDK tears itself down until the user responds. For most teams that brief window before the banner mounts is an acceptable cost. If it isn't, see the `enabled`-gated pattern further down.
 
 ```tsx
 // app/layout.tsx
@@ -236,7 +240,7 @@ export function Analytics({ consented }: { consented: boolean }) {
 }
 ```
 
-The difference matters for compliance. `setConsent(false)` initializes but pauses. Pseudonymous, unidentified session data is captured and held until consent is granted. `enabled: false` skips initialization entirely. Nothing is recorded until it flips to `true`. If your legal requirement is zero data before consent, use `enabled: false`. If pre-consent analytics are acceptable, `setConsent(false)` is simpler to wire up.
+The difference matters for compliance. `enabled: false` skips initialization entirely: the SDK module is never even imported, so nothing runs and nothing is ever captured until it flips to `true`. `setConsent(false)` only does something once the SDK has already started, it flushes and sends whatever was buffered, then tears the SDK down and clears the session cookie. It doesn't hold data pending consent; if anything was captured in the gap between `FlusterduckScript` initializing and your consent effect running, that data already left the browser. If your legal requirement is zero data before consent, use `enabled: false`, not `setConsent(false)` after the fact.
 
 ## Identifying users
 
@@ -291,12 +295,14 @@ In Vercel, set `NEXT_PUBLIC_APP_VERSION` to `$VERCEL_GIT_COMMIT_SHA`. Every sess
 
 ## TypeScript
 
-```ts
-import type { SignalData } from 'flusterduck'
+There's no exported `SignalData` type, `signal()`'s second argument is an inline shape (`{ element?, metadata?, weight? }`). Pass the object literal directly:
 
-const data: SignalData = {
+```tsx
+'use client'
+import { signal } from 'flusterduck'
+
+signal('dead_click', {
   element: '[data-action="publish"]',
   metadata: { blocked_by: 'missing_title' },
-}
-signal('dead_click', data)
+})
 ```
