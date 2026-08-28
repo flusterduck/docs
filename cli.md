@@ -11,18 +11,20 @@ That puts two binaries on your PATH, `flusterduck` and the shorter `duck`. They'
 Run `duck` with no command and you get your product's health, the way `git status` gives you your tree:
 
 ```
-Moda · watching · score 20.9 ↑ · 49 sessions · 328 events · last 24h
+Acme Checkout · watching · score 23.4 ↑ · 61 sessions · 412 events · last 24h
 
-Needs you · 5 open
-  HIGH    State-selector combobox on /states silently eats clicks
-          duck fix fb2a80e3-... · /states · impact 75 · 26d ago
+Needs you · 3 open
+  HIGH    Promo code field clears itself when the cart updates
+          duck fix 3f9a1c7e-... · /checkout · impact 72 · 2d ago
 
-Last deploy 4h ago (a1b2c3d) · 2 issues checked · confusion 44 → 41
+Last deploy 4h ago (a1b2c3d) · 2 issues checked · confusion 41 → 33
 ```
 
 One screen: is data flowing, what needs a human, did the last deploy help. Every id on it is pasteable into `duck fix` or `duck issue show`.
 
 Which site? An explicit `--site` wins, then the site remembered by `duck login`, then the git remote of the directory you're standing in: if your org has connected the repository to a site, `duck` inside that repo resolves to that site with zero configuration (the match is cached locally after the first lookup).
+
+## Set up a project
 
 ```bash
 flusterduck init
@@ -127,6 +129,14 @@ UX issues detected on a site. Filter with `--status` (`open`, `triaged`, `in_pro
 flusterduck issues --site <site_id> --status open --limit 20
 ```
 
+```
+UX Issues · 3 total
+
+HIGH      open        Promo code field clears itself when the cart updates,
+                      so discounts never apply
+                      3f9a1c7e-8b21-4d55-9c02-7e4f6a1b2c3d · /checkout · impact 72 · 4 sessions · 2d ago
+```
+
 ### `insights`
 
 The confused-vs-calm conversion gap: how much less confused sessions convert than calm ones, the pages and traffic sources hit hardest, and the ranked insights. Pass `--days` (1-90, default 7) to set the window.
@@ -163,7 +173,7 @@ duck fix 7f2c9d4a-... --prompt | claude   # hand the whole brief to a coding age
 
 ```bash
 duck sites          # every site in the org: state, score, trend, sparkline
-duck use moda       # set the default site by name or id
+duck use storefront   # set the default site by name or id
 ```
 
 `sites` needs an org-wide key; a site-scoped key already knows its site.
