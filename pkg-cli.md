@@ -35,23 +35,30 @@ The binary answers to both `flusterduck` and `duck`. Run `duck login` to verify 
 
 ## Read
 
-Add `--json` to any command for machine-readable output.
+Add `--json` to any command for machine-readable output, or `--md` for markdown.
 
 ```bash
-duck scores            # site remembered from login
+duck                   # bare: site health, top issues, last deploy verdict
+duck scores            # site remembered from login or the git remote
 duck scores --site <site_id>   # or explicit
 duck issues --status open --limit 20
 duck insights --days 30
+duck sites             # every site in the org (org-wide keys)
+duck top               # live: pages by confusion, refreshing until q
+duck context           # the whole picture as markdown, for agent sessions
 ```
 
 ## Inspect and manage
 
 ```bash
+duck fix                      # worst open issue: diagnosis, fix, marked in progress
+duck fix <issue_id> --prompt  # agent-ready markdown brief, pipe it anywhere
 duck issue show <issue_id>    # full write-up, recommended fix, evidence, verifications
 duck issue resolve <issue_id> --note "Fixed in #142"
 duck issue ignore <issue_id> --note "Third-party widget"
 duck issue reopen <issue_id>
 duck issue start <issue_id>   # moves it to in progress
+duck deploy watch             # sit on the newest deploy until the verdict lands
 ```
 
 ## Record deploys

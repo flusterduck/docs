@@ -6,6 +6,24 @@ npm install -g flusterduck-cli
 
 That puts two binaries on your PATH, `flusterduck` and the shorter `duck`. They're the same program; type whichever you like. If you'd rather not install anything, every command also runs through `npx flusterduck-cli <command>`, which pulls the latest version each time. The examples below use the installed binary.
 
+## Bare `duck`
+
+Run `duck` with no command and you get your product's health, the way `git status` gives you your tree:
+
+```
+Moda · watching · score 20.9 ↑ · 49 sessions · 328 events · last 24h
+
+Needs you · 5 open
+  HIGH    State-selector combobox on /states silently eats clicks
+          duck fix fb2a80e3-... · /states · impact 75 · 26d ago
+
+Last deploy 4h ago (a1b2c3d) · 2 issues checked · confusion 44 → 41
+```
+
+One screen: is data flowing, what needs a human, did the last deploy help. Every id on it is pasteable into `duck fix` or `duck issue show`.
+
+Which site? An explicit `--site` wins, then the site remembered by `duck login`, then the git remote of the directory you're standing in: if your org has connected the repository to a site, `duck` inside that repo resolves to that site with zero configuration (the match is cached locally after the first lookup).
+
 ```bash
 flusterduck init
 ```
@@ -85,7 +103,7 @@ duck logout   # removes the saved key
 
 The browser option opens flusterduck.com, you pick the site this terminal should manage, and a freshly minted key is sent straight to the CLI on your machine (never through a URL). Either way `login` verifies the key against the API before saving, stores it in a `0600` file under your config directory (`~/.config/flusterduck/credentials.json`), and remembers the key's site, so a site-scoped key makes `--site` optional everywhere. Precedence when both exist: `--key` flag, then `FLUSTERDUCK_SECRET_KEY`, then the saved login. Override the API base with `--api` or `FLUSTERDUCK_API_URL`. Every command takes `--json` for raw output.
 
-The CLI is built to be driven by agents as much as by people. `--json` returns the full API payload for every command, exit codes are honest (0 on success, 1 on any failure, with the error on stderr), and piped output drops colors and wrapping so plain-text parsing works too. An agent can run `duck issues --json`, pick an id, read the whole diagnosis with `duck issue show <id> --json`, ship a fix, then `duck issue resolve <id> --note "..."` and `duck deploy notify`, and the next deploy verification closes the loop.
+The CLI is built to be driven by agents as much as by people. `--json` returns the full API payload for every command, read commands also take `--md` for clean markdown, exit codes are honest (0 on success, 1 on any failure, with the error on stderr), and piped output drops colors and wrapping so plain-text parsing works too. The short version of the agent loop: `duck context` to get oriented, `duck fix --prompt` for a complete fix brief, `duck issue resolve <id> --note "..."` when done, `duck deploy watch` for the measured verdict.
 
 ```bash
 duck login
@@ -129,6 +147,44 @@ flusterduck issue resolve 7f2c9d4a-... --note "Fixed in #142"
 flusterduck issue ignore 7f2c9d4a-... --note "Third-party widget, can't fix"
 ```
 
+### `fix`
+
+The whole resolution loop in one command. With no argument it takes the highest-impact open issue; with an id it takes that one. Either way it prints the diagnosis and the recommended fix, marks the issue in progress so your team sees it's claimed, and shows the pinned-commit code locations when code evidence exists.
+
+```bash
+duck fix                     # worst open issue
+duck fix 7f2c9d4a-...        # a specific one
+duck fix 7f2c9d4a-... --prompt | claude   # hand the whole brief to a coding agent
+```
+
+`--prompt` renders the same material as a markdown brief for a coding agent: the behavioral evidence, the recommended direction, the code pointers, and the exact commands to run when done (`duck issue resolve`, `duck deploy watch`), so the agent closes the loop itself.
+
+### `sites` and `use`
+
+```bash
+duck sites          # every site in the org: state, score, trend, sparkline
+duck use moda       # set the default site by name or id
+```
+
+`sites` needs an org-wide key; a site-scoped key already knows its site.
+
+### `top`
+
+A live view: pages sorted by confusion score, refreshing every 5 seconds, `q` to quit. Watch a launch, a deploy, or a traffic spike in real time.
+
+```bash
+duck top
+```
+
+### `context`
+
+Everything about the site's UX health as one markdown document: worst pages, open issues with recommendations, active alerts, recent deploys. Built for priming an agent session in one command.
+
+```bash
+duck context > ux-context.md
+duck context | claude "read this, then fix the worst issue"
+```
+
 ### `status`
 
 Is Flusterduck receiving data for a key? Authenticates with the **publishable** key (`--key fd_pub_...` or `FLUSTERDUCK_PUBLISHABLE_KEY`), so it works before you've ever opened the dashboard. `--wait` polls for up to 3 minutes until the first event lands.
@@ -150,6 +206,15 @@ flusterduck deploy notify --site <site_id> --commit "$(git rev-parse HEAD)" --en
 ```
 
 Same thing, no CLI: POST to [`/v1/deploys`](./deploy-correlation) directly.
+
+### `deploy watch`
+
+After you ship, watch until the verdict lands: Flusterduck captures confusion before the deploy, measures it after, and this command sits on the newest deploy (or `--commit <sha>`) until the before/after numbers resolve. Green means the deploy helped; red means it made friction worse, and the command exits non-zero so CI can catch a regression.
+
+```bash
+flusterduck deploy watch
+flusterduck deploy watch --commit "$(git rev-parse HEAD)" --timeout 45
+```
 
 ## Troubleshooting
 
