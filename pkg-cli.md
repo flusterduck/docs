@@ -5,17 +5,17 @@ The command line for Flusterduck: install the SDK, read scores and issues, manag
 ## Install
 
 ```bash
-npx flusterduck-cli init
+npm install -g flusterduck-cli
 ```
 
-No global install is required. Run it from your project root with `npx`.
+You get two binaries, `flusterduck` and `duck`, same program either way. For a one-off run without installing anything (CI, a machine you don't own), `npx flusterduck-cli <command>` works for every command.
 
 ## Setup
 
 ```bash
 # Detect framework, sign in with your browser, pick or create a site,
 # install packages, inject init, then verify the first event arrives.
-npx flusterduck-cli init
+flusterduck init
 
 # Provide your publishable key non-interactively (CI, scripts).
 npx flusterduck-cli init --key fd_pub_xxxxxxxxxxxx
@@ -24,7 +24,7 @@ npx flusterduck-cli init --key fd_pub_xxxxxxxxxxxx
 Confirm data is flowing anytime:
 
 ```bash
-npx flusterduck-cli status --key fd_pub_xxxxxxxxxxxx --wait
+flusterduck status --key fd_pub_xxxxxxxxxxxx --wait
 ```
 
 The CLI inspects your `package.json` and project files, picks the matching wrapper (React, Next.js, Vue, Svelte, Nuxt, or the core SDK), installs it with your package manager, and wires up initialization in the correct entry point.
@@ -40,23 +40,23 @@ Add `--json` to any command for machine-readable output.
 ```bash
 duck scores            # site remembered from login
 duck scores --site <site_id>   # or explicit
-npx flusterduck-cli issues --site <site_id> --status open --limit 20
-npx flusterduck-cli insights --site <site_id> --days 30
+duck issues --status open --limit 20
+duck insights --days 30
 ```
 
 ## Manage
 
 ```bash
-npx flusterduck-cli issue resolve <issue_id> --note "Fixed in #142"
-npx flusterduck-cli issue ignore <issue_id> --note "Third-party widget"
-npx flusterduck-cli issue reopen <issue_id>
-npx flusterduck-cli issue start <issue_id>   # moves it to in progress
+duck issue resolve <issue_id> --note "Fixed in #142"
+duck issue ignore <issue_id> --note "Third-party widget"
+duck issue reopen <issue_id>
+duck issue start <issue_id>   # moves it to in progress
 ```
 
 ## Record deploys
 
 ```bash
-npx flusterduck-cli deploy notify --site <site_id>
+npx flusterduck-cli deploy notify --site <site_id> --key fd_sec_xxxx
 ```
 
 Run it from CI after each production deploy. Commit hash, author, and PR number are auto-detected on GitHub Actions, Vercel, GitLab, and Bitbucket; override with `--commit`, `--message`, `--author`, `--env`. Flusterduck captures confusion before and after the deploy and verifies whether your fixes actually reduced friction. See [Deploy correlation](./deploy-correlation).

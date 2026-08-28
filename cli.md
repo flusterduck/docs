@@ -1,14 +1,18 @@
 # CLI Reference
 
 ```bash
-npx flusterduck-cli init
+npm install -g flusterduck-cli
+```
+
+That puts two binaries on your PATH, `flusterduck` and the shorter `duck`. They're the same program; type whichever you like. If you'd rather not install anything, every command also runs through `npx flusterduck-cli <command>`, which pulls the latest version each time. The examples below use the installed binary.
+
+```bash
+flusterduck init
 ```
 
 Detects your framework, installs the right packages, and injects the init call into the correct entry file. With no `--key`, it offers to **sign you in with your browser**: a tab opens, you pick or create a site on flusterduck.com, and the key comes back to the terminal automatically: no dashboard round-trip, nothing to copy. (Creating a new site returns its key directly; an existing site asks you to paste the `fd_pub_` key already in its script tag.)
 
 At the end, init offers to **verify the install live**: start your app, click around, and it watches for the first event to arrive, so a wrong-but-well-formed key can never fail silently.
-
-You don't need to install the CLI globally. `npx` pulls the latest version each time.
 
 ## Options
 
@@ -27,7 +31,7 @@ Useful in CI pipelines, onboarding scripts, and anywhere you want a non-interact
 Inject the setup code without installing packages. Use this if you've already installed the SDK separately or if your package manager workflow requires a separate step.
 
 ```bash
-npx flusterduck-cli init --skip-install --key fd_pub_xxxxxxxxxxxx
+flusterduck init --skip-install --key fd_pub_xxxxxxxxxxxx
 ```
 
 ## Framework detection
@@ -53,7 +57,7 @@ The injected code is a single import and a single init call. For Next.js App Rou
 import { FlusterduckScript } from '@flusterduck/next'
 
 // Added inside your RootLayout body:
-<FlusterduckScript apiKey={process.env.NEXT_PUBLIC_FLUSTERDUCK_KEY!} />
+<FlusterduckScript apiKey="fd_pub_xxxxxxxxxxxx" />
 ```
 
 For vanilla React:
@@ -61,24 +65,12 @@ For vanilla React:
 ```tsx
 // src/main.tsx
 import { init } from 'flusterduck'
-init({ key: process.env.VITE_FLUSTERDUCK_KEY! })
+init({ key: 'fd_pub_xxxxxxxxxxxx' })
 ```
+
+The key is written as a literal. That's fine: a publishable key is a public identifier, the same value that sits in a script tag on any site using the snippet install. It can only send events, never read data. If you'd rather load it from an environment variable, swap the literal for your framework's public env reference (`process.env.NEXT_PUBLIC_...`, `import.meta.env.VITE_...`) after the CLI runs.
 
 The CLI doesn't rewrite existing imports or touch your component tree. If Flusterduck is already present in the target file, it skips injection and tells you.
-
-## Environment variable
-
-The injected code references an environment variable, not a literal key. After running the CLI, set the variable:
-
-```bash
-# .env.local (Next.js)
-NEXT_PUBLIC_FLUSTERDUCK_KEY=fd_pub_xxxxxxxxxxxx
-
-# .env (Vite / SvelteKit)
-VITE_FLUSTERDUCK_KEY=fd_pub_xxxxxxxxxxxx
-```
-
-The CLI output tells you the exact variable name for your framework.
 
 ## Reading your data
 
@@ -154,7 +146,7 @@ flusterduck deploy notify --site <site_id>
 flusterduck deploy notify --site <site_id> --commit "$(git rev-parse HEAD)" --env production
 ```
 
-Same thing, no npx: POST to [`/v1/deploys`](./deploy-correlation) directly.
+Same thing, no CLI: POST to [`/v1/deploys`](./deploy-correlation) directly.
 
 ## Troubleshooting
 
