@@ -44,9 +44,10 @@ duck issues --status open --limit 20
 duck insights --days 30
 ```
 
-## Manage
+## Inspect and manage
 
 ```bash
+duck issue show <issue_id>    # full write-up, recommended fix, evidence, verifications
 duck issue resolve <issue_id> --note "Fixed in #142"
 duck issue ignore <issue_id> --note "Third-party widget"
 duck issue reopen <issue_id>

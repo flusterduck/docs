@@ -85,6 +85,8 @@ duck logout   # removes the saved key
 
 The browser option opens flusterduck.com, you pick the site this terminal should manage, and a freshly minted key is sent straight to the CLI on your machine (never through a URL). Either way `login` verifies the key against the API before saving, stores it in a `0600` file under your config directory (`~/.config/flusterduck/credentials.json`), and remembers the key's site, so a site-scoped key makes `--site` optional everywhere. Precedence when both exist: `--key` flag, then `FLUSTERDUCK_SECRET_KEY`, then the saved login. Override the API base with `--api` or `FLUSTERDUCK_API_URL`. Every command takes `--json` for raw output.
 
+The CLI is built to be driven by agents as much as by people. `--json` returns the full API payload for every command, exit codes are honest (0 on success, 1 on any failure, with the error on stderr), and piped output drops colors and wrapping so plain-text parsing works too. An agent can run `duck issues --json`, pick an id, read the whole diagnosis with `duck issue show <id> --json`, ship a fix, then `duck issue resolve <id> --note "..."` and `duck deploy notify`, and the next deploy verification closes the loop.
+
 ```bash
 duck login
 duck issues --status open     # no --key, no --site
@@ -101,7 +103,7 @@ flusterduck scores --site <site_id>
 
 ### `issues`
 
-UX issues detected on a site. Filter with `--status` (`open`, `triaged`, `in_progress`, `resolved`, `verified`, `ignored`, `regressed`) and cap with `--limit`.
+UX issues detected on a site. Filter with `--status` (`open`, `triaged`, `in_progress`, `resolved`, `verified`, `ignored`, `regressed`) and cap with `--limit`. Every issue prints its full title and its UUID, which the `issue` verbs below take. In a terminal, long titles wrap to your window; piped output keeps each field group on one full line, so nothing is ever cut off for a script or an agent.
 
 ```bash
 flusterduck issues --site <site_id> --status open --limit 20
@@ -119,9 +121,10 @@ This needs a conversion event wired so Flusterduck knows what "success" is. See 
 
 ### `issue`
 
-Manage a single issue from the terminal. Verbs: `resolve`, `ignore`, `reopen`, `start` (moves it to in progress). Attach context with `--note`.
+Inspect or manage a single issue from the terminal. `show` prints everything the dashboard knows: the full write-up, the recommended fix, evidence session ids, linked tracker issues (GitHub, Linear), and deploy verification verdicts with before/after confusion. The other verbs change status: `resolve`, `ignore`, `reopen`, `start` (moves it to in progress). Attach context with `--note`.
 
 ```bash
+flusterduck issue show 7f2c9d4a-...
 flusterduck issue resolve 7f2c9d4a-... --note "Fixed in #142"
 flusterduck issue ignore 7f2c9d4a-... --note "Third-party widget, can't fix"
 ```
