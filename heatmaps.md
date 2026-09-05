@@ -71,7 +71,7 @@ Each point has `rx` and `ry` (0 to 1 fractions of the element's width and height
 The `selector` parameter must be URL-encoded. CSS selectors with brackets, spaces, or special characters need proper encoding:
 
 ```bash
-curl "https://rhwhnkrqjlzyzcdhvyky.supabase.co/functions/v1/query/element-heatmap?site_id=YOUR_SITE_ID&page=%2Fcheckout&selector=button.submit" \
+curl "https://api.flusterduck.com/v1/query/element-heatmap?site_id=YOUR_SITE_ID&page=%2Fcheckout&selector=button.submit" \
   -H "Authorization: Bearer fd_sec_xxxxxxxxxxxx"
 ```
 
