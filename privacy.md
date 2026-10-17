@@ -48,6 +48,8 @@ When a production deploy includes a commit SHA, code checks read that deployed c
 
 The detection model may receive a short source excerpt while it investigates a receipt. Flusterduck stores the repository, ref, full SHA, file, line number, and a server-computed content hash. It does not store the source excerpt or a diff patch in the investigation transcript. Search results also state when a bounded literal search is inconclusive, since generated class names and delegated event handlers can evade that search.
 
+For a site with source reads approved, Flusterduck also keeps a project map of the live commit, so detection starts from how the site is built. The map holds structure, never source text: file paths, routes and the files that render them, component names, the element ids, class names and data attribute names each file uses, whether an element is interactive and where a handler is bound to it (as a file and line), the selectors of CSS rules that hide, disable or stack elements with the property names they set, the short visible label of interactive elements (the same words a visitor sees), and a few sentences describing the site's key flows. Those sentences are written by the detection model from the map itself, without the source. The map is kept for the three most recent commits, used by detection, diagnosis and Autofix for that site only, and deleted as soon as source reads are turned off or the site is mapped to a different repository.
+
 The GitHub App may separately request write permission for Autofix. AI detection never receives that write-capable token. Autofix uses a separate token and can only open a draft pull request through its own approval and safety checks.
 
 ## IP addresses
