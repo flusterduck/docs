@@ -13,7 +13,7 @@ If you see tier 1 signals on a critical element (a checkout button, a signup for
 | Signal | What it means |
 |---|---|
 | `rage_click` | User clicked the same element 3 or more times rapidly. Usually means the element appears clickable but isn't responding as expected. |
-| `dead_click` | User clicked a non-interactive element. Often a label, image, or decorative element the user thought was a button. |
+| `dead_click` | User clicked a non-interactive element and the page did nothing in response for over a second: no new content, no navigation, no focus change. Often a label, image, or decorative element the user thought was a button. Clicks your framework handles (React or Vue handlers on a plain `div`) don't count, because the page responds. |
 | `layout_shift_rage` | A rage click followed by a significant layout shift. The interface moved under the user's cursor. |
 | `active_funnel_rejection` | User initiated a multi-step flow and exited before the first meaningful step. Not a casual bounce: they started, then left. |
 | `dead_end_submit` | User submitted a form and received no visible feedback. No success state, no error message, nothing. |
@@ -26,7 +26,7 @@ If you see tier 1 signals on a critical element (a checkout button, a signup for
 | `ghost_toggle` | User clicked a toggle, checkbox, or switch and the state either never changed (swallowed click) or changed then silently reverted within 2 seconds. Requires 2+ ghost events on the same control within 30 seconds. |
 | `no_op_interaction` | User clicked the same interactive control twice and nothing happened: no DOM change, navigation, network request, scroll, or focus move. Unlike `disabled_element_attempt`, the control isn't marked disabled. It just doesn't do anything. |
 | `cls_interaction_corruption` | A layout shift moved the user's click target between mousedown and mouseup. They pressed on the right element, but the page yanked it away and the click landed on something else. |
-| `dead_click_trap_zone` | Three or more dead clicks landed in the same viewport grid zone (the screen is divided into a 4x4 grid) within 90 seconds. A hot spot of non-interactive content that users keep mistaking for a button. |
+| `dead_click_trap_zone` | Three or more dead clicks on at least two different elements landed in the same viewport grid zone (the screen is divided into a 4x4 grid) within 90 seconds. A hot spot of non-interactive content that users keep mistaking for a button. One element clicked over and over shows up as a repeated `dead_click` instead. |
 | `keyboard_trap` | Focus can't escape a container. The user pressed Tab 6+ consecutive times and focus stayed within the same parent region without the user clicking elsewhere. |
 | `focus_trap` | User pressed Tab or Escape 5+ times within 3 seconds inside a dialog, menu, or modal container without escaping it. The trap isn't releasing focus when the user expects it to. |
 | `phantom_progress` | A progress indicator (stepper, progress bar, step counter) is visible but the user has been stuck on the same step for 60+ seconds while actively clicking and typing. The wizard isn't advancing. |
@@ -75,12 +75,12 @@ A page with dense tier 3 signals and no tier 1 or 2 signals is usually one of tw
 | Signal | What it means |
 |---|---|
 | `confidence_collapse` | User paused on a form field for an unusually long time without typing. Hesitation before a field that's unclear. |
-| `target_near_miss` | User's tap or click landed very close to an interactive element but missed it. Common on mobile with small touch targets. |
+| `target_near_miss` | User's tap landed just outside an interactive element, nothing happened, and they tapped the element again within a few seconds. Common on mobile with small touch targets. Taps the browser snaps onto the target anyway don't count. |
 | `user_confusion_idle` | User stopped interacting entirely for longer than expected. Could be reading carefully, or could be stuck. |
 | `thrash_hover` | User rapidly moved the cursor back and forth over an element without clicking. Indecision or unclear affordance. |
 | `text_selection_thrash` | User selected text multiple times rapidly. May be trying to copy something that's being blocked. |
 | `jerky_scrolling` | User's scroll pattern was erratic: fast then stopped, or reversed frequently. Usually indicates a busy page layout. |
-| `thrash_cursor` | Rapid cursor movement across the page with no clear direction. A general confusion indicator. |
+| `thrash_cursor` | Rapid cursor movement across the page with no clear direction. A general confusion indicator. Dragging, sliders, range inputs, canvases, and maps are excluded, since back-and-forth motion is how you use them. |
 | `viewport_thrashing` | Three or more meaningful viewport resize events within 5 seconds. Usually a devtools panel toggling, a window being dragged between monitors, or a mobile browser's chrome showing and hiding, but a page that reflows badly during it will show up here. Pinch-to-zoom is its own signal: see `pinch_zoom` below. |
 | `visibility_thrashing` | User switched away from the tab and back again several times in a row while in the middle of a task: alt-tabbing to check email, a second monitor, another app, or another tab, then returning. Fires only when the round trips started mid-task, not on an idle tab. |
 | `passive_drift` | User stayed on a page longer than average but generated very few events. Could be reading carefully or completely lost. |
@@ -92,7 +92,7 @@ A page with dense tier 3 signals and no tier 1 or 2 signals is usually one of tw
 | `video_autoplay_escape` | A video or audio element autoplayed and the user immediately paused it, muted it, or scrolled past it within 3 seconds. Autoplaying media is annoying enough that they took evasive action. |
 | `scroll_hijack` | User's scroll reversed direction 4+ times within 3 seconds with large-stroke reversals. The page is overriding native scroll behavior (smooth-scroll libraries, scroll-snap fights, parallax effects). |
 | `input_correction` | User deleted 3+ characters and retyped a field at least twice within 60 seconds. They keep correcting their input, likely because a validation rule or format requirement is unclear. |
-| `hover_dwell` | User hovered over an interactive element for 2+ seconds without clicking. They're reading it, evaluating it, or unsure what it does. Cooldown of 30 seconds per element prevents noise. |
+| `hover_dwell` | User held the cursor still on an interactive element for 3 to 10 seconds, then moved away without clicking. They're reading it, evaluating it, or unsure what it does. A cursor parked while someone reads, or content scrolling under a still cursor, doesn't count. Cooldown of 30 seconds per element prevents noise. |
 | `copy_frustration` | User triggered the copy action 3+ times within 15 seconds. Repeated copy attempts suggest the selection isn't working as expected or copy is being blocked. |
 | `scroll_depth_abandon` | Tracks the deepest scroll point reached before the user leaves the page. Fires on page hide or visibility change with the max scroll depth as a percentage. Useful for identifying where users give up on long pages. |
 | `offline_interaction_blackhole` | The device is offline and the user keeps clicking interactive elements that cannot respond, with nothing on the page saying the connection is gone. |
@@ -174,7 +174,7 @@ Session-level and cross-signal patterns. These don't detect a single friction mo
 | `frustration_burst` | Multiple friction signals fired within a 60-second window and the weighted total crossed a severity threshold. Levels: low, medium, high, critical. Includes the top contributing signal types and detected behavioral sequences (like rage click followed by form validation loop). Context, not a friction type of its own: it's stored as a raw event and never clusters into an issue on its own. |
 | `friction_cascade` | A tier 1 signal fired and was followed by 2+ distinct tier 2 or tier 3 signal types within 90 seconds on the same page. The tier 1 signal starts the measured sequence; the later signals don't prove its cause. Same as `frustration_burst`: context around a cluster, not a weighted friction type by itself. |
 | `element_impression` | Tracks when a watched element (marked with `[data-fd-impression]` or a custom selector) enters the viewport. Records first-seen time and visibility percentage. Not a friction signal, but useful for measuring whether users actually see a specific element before abandoning. |
-| `exit_intent` | User's cursor left the browser viewport toward the top of the screen (toward the tab bar or address bar). Classic indicator they're about to close the tab or leave. Fires after 3+ seconds on page, once per 60 seconds. Like the two above, it's context rather than a weighted friction type: most exit intents are just people leaving, not evidence of confusion. |
+| `exit_intent` | User's cursor left the browser viewport toward the top of the screen (toward the tab bar or address bar). Classic indicator they're about to close the tab or leave. Fires after 3+ seconds on page, once per 60 seconds, and not at all if the cursor comes straight back into the page. Like the two above, it's context rather than a weighted friction type: most exit intents are just people leaving, not evidence of confusion. |
 
 ## UX anti-patterns
 
@@ -275,7 +275,7 @@ Signals that detect friction specific to assistive technology users and accessib
 | `focus_order_confusion` | User pressed Tab and focus moved to an element that's visually distant from the previously focused element. The DOM order and visual order disagree, causing a disorienting jump. Fires when the focus target is more than 500px from the previous focus target. |
 | `screen_reader_dead_end` | User moving through the page via `aria-` landmarks or heading shortcuts (`H` key in screen readers) reached a point with no further landmarks or headings, then reversed direction. The page structure has a dead end that forces backtracking. |
 | `motion_sensitivity_trigger` | An animation or transition ran while the user has `prefers-reduced-motion: reduce` set. The site ignored the user's motion preference. |
-| `contrast_interaction_failure` | User hovered or focused an interactive element and the resulting state change (hover color, focus outline) didn't meet WCAG AA contrast ratio against its background. The interactive feedback is invisible to users with low vision. |
+| `contrast_interaction_failure` | User clicked just outside a control, then found it, and the control's text doesn't meet the WCAG AA contrast ratio against its background. The faint control was hard to see or hit. A first-try click on a low-contrast control doesn't count. |
 
 ## Custom signals
 

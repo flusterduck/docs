@@ -205,6 +205,13 @@ destroy()
 
 Calling `init()` after `destroy()` restarts detection, but it's the same session: `destroy()` doesn't clear the session cookie, only the SDK's in-memory state. If you need a fresh session (a logout, a shared-device handoff), call `setConsent(false)` or `optOut()` instead, or clear the `_fd_s` cookie yourself before calling `init()` again.
 
+## Keeping your own traffic out
+
+You clicking around your own site isn't friction your users hit, so it shouldn't file issues or move your scores.
+
+- **Your browser.** Open any page of your site with `?fd_internal=1` added to the address. The SDK sets a first-party `_fd_internal` cookie and stops sending from that browser, on every page, for a year. Open a page with `?fd_internal=0` to count yourself again. Do it once per browser you use.
+- **Automation.** Test runners and crawlers are ignored without any setup: `navigator.webdriver`, a headless Chrome user agent, and the globals Playwright, Selenium, chromedriver, Cypress, PhantomJS and Nightmare inject all make the SDK stand down. So do clicks that land in different places with no pointer movement between them, which a person with a mouse can't do. When that's caught mid-visit, the SDK stops and the visit's data is deleted. A declared development environment (`data-env="development"`) is exempt, so local verification still works.
+
 ## TypeScript
 
 The package ships full type definitions. There's an exported `SignalType` union for compile-time checking, but it's a legacy subset, not the full 132: it covers the core detectors from earlier releases and won't autocomplete names added since (payment, auth, and pricing signals among them). For the current, complete list, check [Signals](/signals) rather than relying on the type.
