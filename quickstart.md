@@ -35,7 +35,7 @@ Call `init()` once at app startup, before any user interaction:
 ```ts
 import { init } from 'flusterduck'
 
-init({ key: process.env.NEXT_PUBLIC_FLUSTERDUCK_KEY! })
+init({ key: process.env.NEXT_PUBLIC_FLUSTERDUCK_KEY!, respectDoNotTrack: false })
 ```
 
 The SDK starts detecting behavioral signals from that point. No other configuration required to start collecting.
@@ -72,7 +72,7 @@ VITE_FLUSTERDUCK_KEY=fd_pub_xxxxxxxxxxxx
 NUXT_PUBLIC_FLUSTERDUCK_KEY=fd_pub_xxxxxxxxxxxx
 ```
 
-`fd_sec_` and `fd_mcp_` keys are different. Both are server-side only. Secret keys can read your site data through the query API; MCP keys can read through the MCP bridge and may be granted additional tool scopes. Keep both out of the browser.
+`fd_sec_` and `fd_mcp_` keys are different. Both are server-side only. Secret keys read your site data through the query API, and write through the manage API when they carry the `manage:write` scope; MCP keys can read through the MCP bridge and may be granted additional tool scopes. Keep both out of the browser.
 
 ## What you'll see first
 

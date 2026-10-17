@@ -26,7 +26,7 @@ Point it at your dev server:
 npx flusterduck-test --url http://localhost:3000 --key fd_pub_xxxxxxxxxxxx
 ```
 
-One thing matters here: declare a development environment on the app you're testing. Flusterduck treats automated browsers and local hosts as noise in production. Events sent from `localhost` or a browser that identifies itself as automated (which Playwright does) are acknowledged but never stored, so a verification run can't burn your session quota or create phantom issues. Add `data-env="development"` to your script tag (or `environment: 'development'` in your `init()` call) on the app you point the CLI at, and both filters stand down for that traffic. Accepted names: `development`, `dev`, `test`, `testing`, `staging`, `local`.
+One thing matters here: declare a development environment on the app you're testing. Flusterduck treats automated browsers and local hosts as noise in production. Events sent from `localhost` or a browser that identifies itself as automated (which Playwright does) are acknowledged but never stored, so a verification run can't burn your session quota or create phantom issues. Add `data-env="development"` to your script tag (or `environment: 'development'` in your `init()` call) on the app you point the CLI at, and both filters stand down for that traffic. Accepted names: `development`, `dev`, `test`, `testing`, `staging`, `local`. The traffic is still stored under the key's own environment. With the production key a site gets at creation, a test run counts toward your plan's sessions and its friction can open issues, so point the CLI at a site you added just for testing.
 
 The CLI opens a headless Chromium browser, loads the URL you gave it, and runs every applicable simulation on that one page in sequence. It's a single-page tool: point it at a specific route (like `/checkout`) to test that page, not your whole site.
 
@@ -158,7 +158,7 @@ Run the test suite after your dev server starts to verify the integration hasn't
 
 `--threshold <n>` exits with code 1 if fewer than `n` signals were simulated across the whole run. It's a check that the page had enough interactive surface for the run to mean anything, not a check that Flusterduck received the signals. Use a low number for a thin page and a higher one for something like a checkout form with several fields and buttons.
 
-Use a separate `fd_pub_` key for CI testing. Create one under Settings > API Keys and label it "test." Data from this key won't affect your production scores if you scope your dashboard view to the production key.
+Settings > API Keys only creates secret and MCP keys, so there is no separate publishable test key to make there. A test run against a production key is stored as production traffic. To keep CI runs out of your real numbers, point the CLI at a site you added just for testing.
 
 ## Debugging a missed signal
 

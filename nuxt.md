@@ -47,7 +47,7 @@ If your key is a plain string (no runtime config needed), you can skip `defineNu
 // plugins/flusterduck.client.ts
 import { createFlusterduckPlugin } from '@flusterduck/nuxt'
 
-export default createFlusterduckPlugin({ key: 'fd_pub_xxxxxxxxxxxx' })
+export default createFlusterduckPlugin({ key: 'fd_pub_xxxxxxxxxxxx', respectDoNotTrack: false })
 ```
 
 The `.client.ts` suffix is what makes this browser-only. Without it, Nuxt runs the plugin during SSR and the SDK's browser guard exits before doing anything useful, so you'd get a plugin that quietly never initializes on the server render and only catches up once the client bundle runs the same file again. The suffix is not optional.

@@ -98,7 +98,7 @@ These are rough guides, not absolute thresholds. A score of 45 on a low-traffic 
 ## Scores via the API
 
 ```bash
-curl "https://api.flusterduck.com/v1/scores" \
+curl "https://api.flusterduck.com/v1/query/scores" \
   -H "Authorization: Bearer fd_sec_xxxxxxxxxxxx"
 ```
 
@@ -128,7 +128,7 @@ curl "https://api.flusterduck.com/v1/scores" \
 Get score history for a specific page:
 
 ```bash
-curl "https://api.flusterduck.com/v1/trends?page=/checkout&days=30" \
+curl "https://api.flusterduck.com/v1/query/trends?page=/checkout&days=30" \
   -H "Authorization: Bearer fd_sec_xxxxxxxxxxxx"
 ```
 

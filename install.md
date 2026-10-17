@@ -8,7 +8,7 @@ The fastest way to install: paste one tag before the closing `</body>`, no build
 <script src="https://flusterduck.com/d.js" data-key="fd_pub_xxxxxxxxxxxx" data-dnt="false" async></script>
 ```
 
-Replace `fd_pub_xxxxxxxxxxxx` with your publishable key from Settings > API Keys. Keep `data-dnt="false"`: the SDK does not capture form values or user-typed text, and short element labels are PII-redacted before they leave the browser. The default Do Not Track behavior silently drops 30-50% of visitors (Firefox, Brave, privacy extensions) without changing those collection boundaries.
+Replace `fd_pub_xxxxxxxxxxxx` with your site's publishable key. Onboarding shows it once, when you add the site. Lost it? Settings > Sites > New key mints a fresh one (the old one stops working). Keep `data-dnt="false"`: the SDK does not capture form values or user-typed text, and short element labels are PII-redacted before they leave the browser. The default Do Not Track behavior silently drops 30-50% of visitors (Firefox, Brave, privacy extensions) without changing those collection boundaries.
 
 The bootstrap reads its config from `document.currentScript`, and falls back to `document.querySelector('script[data-key^="fd_pub_"]')` if that's unset, so injecting the tag dynamically (`document.createElement('script')`, tag managers, etc.) works too, as long as `async` and `data-key` are set.
 
@@ -20,7 +20,7 @@ Want zero third-party runtime dependency, or run under a strict CSP that forbids
 
 ### Verifying locally
 
-Flusterduck treats non-user traffic as noise: events sent from `localhost` (or other dev hosts) and events from automated browsers are acknowledged but never stored, so a developer smoke-test (thanks Claude) can't burn your session quota, skew scores, or create phantom issues. To see events actually land while developing, add `data-env="development"` to the tag (or pass `environment: 'development'` to `init`), which stands those filters down and tags the traffic as development. Accepted names: `development`, `dev`, `test`, `testing`, `staging`, `local`. Remove the attribute before shipping. The [test-suite CLI](./testing) walks the whole verification for you.
+Flusterduck treats non-user traffic as noise: events sent from `localhost` (or other dev hosts) and events from automated browsers are acknowledged but never stored, so a developer smoke-test (thanks Claude) can't burn your session quota, skew scores, or create phantom issues. To see events actually land while developing, add `data-env="development"` to the tag (or pass `environment: 'development'` to `init`), which stands those filters down. Accepted names: `development`, `dev`, `test`, `testing`, `staging`, `local`. The events are still stored under your key's environment, and the key a site gets at creation is its production key, so that traffic counts toward your plan's sessions and can feed issues. Keep it to short checks and remove the attribute before shipping. The [test-suite CLI](./testing) walks the whole verification for you.
 
 ## Packages
 
@@ -76,7 +76,7 @@ Not using a framework wrapper? Initialize the SDK directly with `init()`. It wor
 
 ## Publishable key
 
-Your publishable key starts with `fd_pub_`. Find it in the dashboard under Settings > API Keys.
+Your publishable key starts with `fd_pub_`. It's shown once, when you add the site. Settings > Sites shows its prefix, and **New key** there mints a replacement if you lost the full key.
 
 Set it as an environment variable:
 

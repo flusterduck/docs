@@ -4,7 +4,7 @@ Confusion scores tell you a page is broken. Revenue impact tells you what it's c
 
 **Per-issue estimates** turn "47 users are rage-clicking the complete purchase button" into "and it's costing about $2,400-$3,800/mo." Every issue carries one, driven by published conversion-impact research for that signal type, sharpened by your own numbers if you provide them.
 
-**Revenue opportunities** look for a more direct kind of leak: sessions where a visitor showed intent to pay one amount and ended up paying less, or nothing. This is the `/v1/revenue` endpoint, and it's a session-level accounting, not a friction-pattern estimate.
+**Revenue opportunities** look for a more direct kind of leak: sessions where a visitor showed intent to pay one amount and ended up paying less, or nothing. This is the `/v1/query/revenue` endpoint, and it's a session-level accounting, not a friction-pattern estimate.
 
 Both read from the same `track()` events. Wire them once.
 
@@ -49,7 +49,7 @@ Never pass PII, form values, or any user-typed content. The engine only needs th
 
 ## Per-issue estimates
 
-Every open issue carries a `revenue_impact` object, visible via `GET /v1/issues` and `GET /v1/issues/:id`. It works even if you never call `track()`, because it starts from a published research benchmark rather than your own conversion data.
+Every open issue carries a `revenue_impact` object, visible via `GET /v1/query/issues` and `GET /v1/query/issues/:id`. It works even if you never call `track()`, because it starts from a published research benchmark rather than your own conversion data.
 
 For the issue's dominant signal type, the engine looks up a conversion-drop range (a `rage_click` on a critical element is benchmarked at 18-28%, `form_abandonment` at 25-40%, and so on down to ambient signals in the 4-10% range), then applies that range to the percentage of sessions on the page the issue actually affected:
 
@@ -85,10 +85,10 @@ Use the range as a prioritization signal, not a forecast. It assumes the benchma
 
 ## Revenue opportunities
 
-`GET /v1/revenue` looks for something more concrete than a benchmark: sessions where a visitor's intent and their outcome don't match.
+`GET /v1/query/revenue` looks for something more concrete than a benchmark: sessions where a visitor's intent and their outcome don't match.
 
 ```bash
-curl "https://api.flusterduck.com/v1/revenue" \
+curl "https://api.flusterduck.com/v1/query/revenue" \
   -H "Authorization: Bearer fd_sec_xxxxxxxxxxxx"
 ```
 
@@ -132,7 +132,7 @@ Rank the open issues by revenue at risk.
 Are there sessions where someone intended a bigger plan and downgraded?
 ```
 
-The `get_revenue_impact` tool returns the same opportunities data as `GET /v1/revenue`, formatted for your AI assistant to reason about.
+The `get_revenue_impact` tool returns the same opportunities data as `GET /v1/query/revenue`, formatted for your AI assistant to reason about.
 
 ## Annual vs monthly
 

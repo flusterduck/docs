@@ -2,7 +2,7 @@
 
 Flusterduck already knows where people get confused. The conversion trigger tells it what *success* looks like on your site: the single event that means a visitor did the thing you wanted. Once that's wired, Flusterduck can prove the part that matters to the business: **confused sessions convert less than calm ones**, and it can put a number on the gap.
 
-This page covers the two steps to set it up, then the confused-vs-calm insight it unlocks.
+This page covers the two steps to set it up, then the confused-vs-calm comparison you get from it.
 
 ## Why this exists
 
@@ -46,11 +46,10 @@ Tell Flusterduck which business event is *the* conversion for this site. Open **
 Under the hood this is stored as `revenue_config.conversion_goal` on the site's production SDK config. If you manage config through the API, set it with the `manage` write API:
 
 ```bash
-curl -X PATCH "https://api.flusterduck.com/v1/manage/sdk-config" \
+curl -X PATCH "https://api.flusterduck.com/v1/manage/sdk-config?site_id=<site_id>" \
   -H "Authorization: Bearer <jwt>" \
   -H "Content-Type: application/json" \
   -d '{
-    "site_id": "<site_id>",
     "environment": "production",
     "revenue_config": { "conversion_goal": "purchase_completed" }
   }'
@@ -58,7 +57,7 @@ curl -X PATCH "https://api.flusterduck.com/v1/manage/sdk-config" \
 
 **Leaving the goal unset is a valid choice.** With no `conversion_goal`, Flusterduck counts *any* realized-purchase event (`checkout_completed`, `purchase_completed`, or `subscription_started`) as a conversion. Set an explicit goal when you fire several of those events but only one of them is the outcome you care about. The goal narrows the definition to exactly that event.
 
-## The insight it unlocks
+## What you get
 
 With a conversion firing, the confused-vs-calm analysis becomes available. It reports:
 
@@ -69,7 +68,7 @@ With a conversion firing, the confused-vs-calm analysis becomes available. It re
 
 ### Read it three ways
 
-**REST**: `GET /v1/query/insights?site_id=<id>&days=7` (window is 1–90 days, default 7):
+**REST**: `GET /v1/query/insights?site_id=<id>&days=7` (window is 1 to 90 days, default 7):
 
 ```bash
 curl "https://api.flusterduck.com/v1/query/insights?site_id=<site_id>&days=30" \

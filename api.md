@@ -12,14 +12,14 @@ Pass your key in the Authorization header:
 Authorization: Bearer fd_sec_your_key_here
 ```
 
-`fd_sec_` keys work for read endpoints with the `query:read` scope and for write endpoints with the `manage:write` scope. A user JWT issued during login works everywhere, same header format. Browser code must never use `fd_sec_` keys.
+`fd_sec_` keys work for read endpoints with the `query:read` scope, and for issue, alert, monitor and annotation writes with the `manage:write` scope. Sites, members, keys, webhooks and SDK config need a signed-in user's JWT, which works everywhere with the same header format. Browser code must never use `fd_sec_` keys.
 
 ## Rate limits
 
 | Surface | Limit |
 |---|---|
-| Read API (`/query`) | 100 requests/minute per org |
-| Write API (`/manage`) | 30 requests/minute per org |
+| Read API (`/query`) | 100 requests/minute per key or signed-in user (set per key) |
+| Write API (`/manage`) | 30 requests/minute per key or signed-in user |
 
 Responses over the limit return `429` with a `reset_at` timestamp in `error.details` telling you when the window opens again.
 

@@ -172,9 +172,9 @@ All requests are verified against Slack's signing secret with a 5-minute timesta
 
 Two more edge functions handle all external data access:
 
-**query** is the read API. It accepts user JWTs, `fd_sec_` secret keys, or `fd_mcp_` MCP keys. Routes include scores, issues, alerts, deploys, trends, sessions, recommendations, revenue, raw event export, and MCP context. Rate limited to 100 requests per minute per org.
+**query** is the read API. It accepts user JWTs, `fd_sec_` secret keys, or `fd_mcp_` MCP keys. Routes include scores, issues, alerts, deploys, trends, sessions, recommendations, revenue, raw event export, and MCP context. Rate limited to 100 requests per minute per key or user.
 
-**manage** is the write API. JWT only, no API keys. It handles CRUD for orgs, sites, environments, API keys, SDK configs, alert rules, issues, members, webhooks, integrations, and billing. Rate limited to 30 requests per minute per org. Admin-only routes verify the user's role before proceeding.
+**manage** is the write API. It accepts user JWTs, or `fd_sec_`/`fd_mcp_` keys with the `manage:write` scope for issue, alert, monitor and annotation routes. It handles CRUD for orgs, sites, environments, API keys, SDK configs, alert rules, issues, members, webhooks, integrations, and billing. Rate limited to 30 requests per minute per key or user. Admin-only routes verify the user's role before proceeding.
 
 ## What the frontend can and can't do
 

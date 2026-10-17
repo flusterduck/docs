@@ -23,7 +23,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="en">
       <body>
         {children}
-        <FlusterduckScript apiKey={process.env.NEXT_PUBLIC_FLUSTERDUCK_KEY!} />
+        <FlusterduckScript apiKey={process.env.NEXT_PUBLIC_FLUSTERDUCK_KEY!} respectDoNotTrack={false} />
       </body>
     </html>
   )
@@ -48,7 +48,7 @@ export default function App({ Component, pageProps }: AppProps) {
   return (
     <>
       <Component {...pageProps} />
-      <FlusterduckScript apiKey={process.env.NEXT_PUBLIC_FLUSTERDUCK_KEY!} />
+      <FlusterduckScript apiKey={process.env.NEXT_PUBLIC_FLUSTERDUCK_KEY!} respectDoNotTrack={false} />
     </>
   )
 }
@@ -106,10 +106,10 @@ Everything from the core `Config` type plus `enabled`:
 | `cookieless` | `boolean` | `false` | Memory-only session IDs instead of cookies. |
 | `respectDoNotTrack` | `boolean` | `true` | Honor `navigator.doNotTrack`. Most teams pass `false`: Flusterduck captures no PII, and the default silently drops 30-50% of visitors on Firefox, Brave, and other privacy-focused browsers. |
 | `ignoreElements` | `string[]` | `[]` | CSS selectors to suppress signals on. Useful for admin overlays or debug panels. |
-| `ignorePages` | `string[]` | `[]` | Page paths to skip. Match is prefix-based. |
+| `ignorePages` | `string[]` | `[]` | Page paths to skip. Exact path match. A trailing `*` matches a prefix, a leading `*` matches a suffix. |
 | `segment` | `Record<string, string>` | - | Static tags on every event. |
 | `debug` | `boolean` | `false` | Verbose console logging. |
-| `batchInterval` | `number` | - | Milliseconds between flushes. Default flushes on idle and before unload. |
+| `batchInterval` | `number` | `7000` | Milliseconds between flushes, clamped to 500 to 10000. Pending events also flush before unload. |
 | `compression` | `'auto' \| 'off'` | `'auto'` | `'auto'` uses compression when the browser supports it. |
 | `elementImpressionSelectors` | `string[]` | - | CSS selectors to emit an impression signal when they enter the viewport. |
 | `enabled` | `boolean` | `true` | `false` skips initialization entirely. Flip to `true` and it initializes then. |
@@ -174,7 +174,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="en">
       <body>
         {children}
-        <FlusterduckScript apiKey={process.env.NEXT_PUBLIC_FLUSTERDUCK_KEY!} />
+        <FlusterduckScript apiKey={process.env.NEXT_PUBLIC_FLUSTERDUCK_KEY!} respectDoNotTrack={false} />
         <ConsentBanner />
       </body>
     </html>
@@ -276,6 +276,7 @@ Pass an opaque internal ID, not an email, name, or anything PII.
 ```tsx
 <FlusterduckScript
   apiKey={process.env.NEXT_PUBLIC_FLUSTERDUCK_KEY!}
+  respectDoNotTrack={false}
   environment={process.env.NODE_ENV}
   segment={{ app_version: process.env.NEXT_PUBLIC_APP_VERSION ?? 'unknown' }}
 />

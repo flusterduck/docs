@@ -43,7 +43,7 @@ Call once at app startup. Calling it multiple times after initialization is a no
 ```ts
 import { init } from 'flusterduck'
 
-init({ key: process.env.NEXT_PUBLIC_FLUSTERDUCK_KEY! })
+init({ key: process.env.NEXT_PUBLIC_FLUSTERDUCK_KEY!, respectDoNotTrack: false })
 ```
 
 ### Config options

@@ -17,7 +17,7 @@ npm install @flusterduck/svelte flusterduck
   import { initFlusterduck } from '@flusterduck/svelte'
 
   if (browser) {
-    initFlusterduck({ key: 'fd_pub_xxxxxxxxxxxx' })
+    initFlusterduck({ key: 'fd_pub_xxxxxxxxxxxx', respectDoNotTrack: false })
   }
 </script>
 

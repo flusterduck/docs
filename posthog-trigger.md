@@ -59,7 +59,7 @@ Call `initPostHogTrigger` after `init`. It waits for PostHog to load on its own,
 ```typescript
 import { init, initPostHogTrigger } from 'flusterduck';
 
-init({ key: 'fd_pub_...' });
+init({ key: 'fd_pub_...', respectDoNotTrack: false });
 
 initPostHogTrigger({
   conversionEvents: ['plan_changed', 'seat_added'],

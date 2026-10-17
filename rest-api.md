@@ -10,7 +10,7 @@ Create a secret key in Settings > API Keys. It starts with `fd_sec_`. Pass it as
 Authorization: Bearer fd_sec_your_key_here
 ```
 
-The key must have the right scopes. A key with `query:read` can read scores, issues, alerts, deploys, and raw data. A key with `manage:write` can create sites, update alert rules, triage issues, and manage members. You set scopes when creating the key.
+The key must have the right scopes. A key with `query:read` can read scores, issues, alerts, deploys, and raw data. A key with `manage:write` can triage issues and manage alert rules, alerts, monitors and annotations. Creating sites, managing members, keys, webhooks and SDK config need a signed-in user. You set scopes when creating the key.
 
 MCP keys (`fd_mcp_`) also work for read operations.
 
@@ -280,7 +280,7 @@ A single-call summary designed for AI assistants: top scores, open issues, recen
 
 ## Writing data
 
-Manage routes use POST, PATCH, or DELETE. All require a key with `manage:write` scope.
+Manage routes use POST, PATCH, or DELETE. Issue, alert, monitor and annotation routes accept a key with `manage:write` scope. The rest need a signed-in user's JWT.
 
 ### Sites
 
@@ -334,7 +334,7 @@ DELETE /manage/webhooks/{id}
 
 ```
 GET   /manage/sdk-config?site_id={id}
-PATCH /manage/sdk-config/{environment}  { revenue_config, ... }
+PATCH /manage/sdk-config/{site_id}  { environment, revenue_config, ... }
 ```
 
 ### Integrations
@@ -361,8 +361,8 @@ Key types: `secret`, `mcp`. Scopes: `ingest:write`, `query:read`, `manage:write`
 
 | Endpoint | Limit |
 |---|---|
-| query | 100 RPM per org |
-| manage | 30 RPM per org |
+| query | 100 RPM per key or user (set per key) |
+| manage | 30 RPM per key or user |
 | guide | 200 RPM per site |
 | ingest | 10,000 RPM per publishable key |
 

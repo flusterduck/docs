@@ -18,7 +18,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en">
       <body>
-        <FlusterduckScript apiKey="fd_pub_xxxxxxxxxxxx" />
+        <FlusterduckScript apiKey="fd_pub_xxxxxxxxxxxx" respectDoNotTrack={false} />
         {children}
       </body>
     </html>

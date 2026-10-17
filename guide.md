@@ -8,7 +8,7 @@ Not a tooltip. Not a chatbot. Not a product tour someone authored six months ago
 
 ## Why this exists
 
-Powerful software loses users at the moment of confusion. Someone opens a dashboard, a settings panel, an admin console, and freezes. They don't know what a button does. They're scared to click because they can't tell whether the next action charges their card, deletes something, or triggers a notification they can't undo.
+Complex software loses users at the moment of confusion. Someone opens a dashboard, a settings panel, an admin console, and freezes. They don't know what a button does. They're scared to click because they can't tell whether the next action charges their card, deletes something, or triggers a notification they can't undo.
 
 That fear is the thing. The task isn't hard. The not-knowing is.
 

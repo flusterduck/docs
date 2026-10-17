@@ -58,7 +58,7 @@ The engine occasionally finds that two issues describe the same underlying frict
 Via the API:
 
 ```bash
-curl -X POST https://api.flusterduck.com/v1/issues/iss_xxxxxxxxxxxx \
+curl -X PATCH https://api.flusterduck.com/v1/manage/issues/<issue_uuid> \
   -H "Authorization: Bearer fd_sec_xxxxxxxxxxxx" \
   -H "Content-Type: application/json" \
   -d '{
@@ -106,7 +106,7 @@ Verification needs deploy records to work correctly. Without them, the engine ca
 Every issue includes a `sessions` array: session IDs where the friction pattern appears. Use them to check the diagnosis and any cause claim.
 
 ```bash
-curl "https://api.flusterduck.com/v1/session?session_id=ses_xxxxxxxxxxxx" \
+curl "https://api.flusterduck.com/v1/query/session?session_id=ses_xxxxxxxxxxxx" \
   -H "Authorization: Bearer fd_sec_xxxxxxxxxxxx"
 ```
 
@@ -128,7 +128,7 @@ Bounded page inspection and episode receipts can support narrower facts, includi
 ## Getting all issues via the API
 
 ```bash
-curl "https://api.flusterduck.com/v1/issues?status=open" \
+curl "https://api.flusterduck.com/v1/query/issues?status=open" \
   -H "Authorization: Bearer fd_sec_xxxxxxxxxxxx"
 ```
 
@@ -156,7 +156,7 @@ Filter by any status: `open`, `triaged`, `in_progress`, `verified`, `resolved`, 
 ## Getting full issue detail
 
 ```bash
-curl "https://api.flusterduck.com/v1/issues/iss_xxxxxxxxxxxx" \
+curl "https://api.flusterduck.com/v1/query/issues/<issue_uuid>" \
   -H "Authorization: Bearer fd_sec_xxxxxxxxxxxx"
 ```
 
