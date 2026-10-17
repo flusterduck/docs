@@ -31,7 +31,7 @@ The CLI inspects your `package.json` and project files, picks the matching wrapp
 
 ## Sign in once
 
-The binary answers to both `flusterduck` and `duck`. Run `duck login` to verify and save your `fd_sec_` key locally (0600 file, readable only by you). After that, no command needs `--key`, and a site-scoped key makes `--site` optional too. `duck logout` removes it. Explicit `--key` / `FLUSTERDUCK_SECRET_KEY` always take precedence.
+The binary answers to both `flusterduck` and `duck`. Run `duck login` to verify and save your `fd_sec_` key locally (0600 file, readable only by you). After that, no command needs `--key`, and a site-scoped key makes `--site` optional too. `duck logout` removes it. Explicit `--key` / `FLUSTERDUCK_SECRET_KEY` always take precedence. The CLI also accepts an `fd_mcp_` key for reads and reads `FLUSTERDUCK_MCP_KEY`, so the key you gave the MCP server works here too.
 
 ## Read
 

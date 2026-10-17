@@ -30,7 +30,7 @@ Which site? An explicit `--site` wins, then the site remembered by `duck login`,
 flusterduck init
 ```
 
-Detects your framework, installs the right packages, and injects the init call into the correct entry file. With no `--key`, it offers to **sign you in with your browser**: a tab opens, you pick or create a site on flusterduck.com, and the key comes back to the terminal automatically: no dashboard round-trip, nothing to copy. (Creating a new site returns its key directly; an existing site asks you to paste the `fd_pub_` key already in its script tag.)
+Detects your framework, checks your key with Flusterduck before touching any file, adds the setup code to the correct entry file, and installs the packages that code imports. A plain HTML site (an `index.html` and no `package.json`) gets the script tag inserted into its `<head>` and nothing installed. With no `--key`, it offers to **sign you in with your browser**: a tab opens, you pick or create a site on flusterduck.com, and the key comes back to the terminal automatically: no dashboard round-trip, nothing to copy. (Creating a new site returns its key directly; an existing site asks you to paste the `fd_pub_` key already in its script tag.)
 
 At the end, init offers to **verify the install live**: start your app, click around, and it watches for the first event to arrive, so a wrong-but-well-formed key can never fail silently.
 
@@ -44,11 +44,11 @@ Skip the key prompt:
 npx flusterduck-cli init --key fd_pub_xxxxxxxxxxxx
 ```
 
-Useful in CI pipelines, onboarding scripts, and anywhere you want a non-interactive run.
+Useful in CI pipelines, onboarding scripts, and anywhere you want a non-interactive run. `FLUSTERDUCK_PUBLISHABLE_KEY` works too. Without a terminal (an agent, CI, a pipe) init never prompts: with no key it stops and tells you to pass `--key`.
 
 ### `--skip-install`
 
-Inject the setup code without installing packages. Use this if you've already installed the SDK separately or if your package manager workflow requires a separate step.
+Add the setup code without installing packages. init then prints the exact install command and exits with code 1, because the code it added imports packages that are not installed yet. Run the printed command to finish.
 
 ```bash
 flusterduck init --skip-install --key fd_pub_xxxxxxxxxxxx
@@ -58,27 +58,29 @@ flusterduck init --skip-install --key fd_pub_xxxxxxxxxxxx
 
 The CLI reads your `package.json` and project structure to determine your framework, then installs and injects accordingly:
 
-| Detected | Packages installed | File injected |
+| Detected | Packages installed | File changed |
 |---|---|---|
-| Next.js | `flusterduck` `@flusterduck/next` | `app/layout.tsx` (App Router) or `pages/_app.tsx` (Pages Router) |
+| Next.js | `flusterduck` `@flusterduck/next` | `app/layout.tsx` or `src/app/layout.tsx` (App Router), plus `.env.local` |
 | SvelteKit | `flusterduck` `@flusterduck/svelte` | `src/routes/+layout.svelte` |
-| Nuxt | `flusterduck` `@flusterduck/nuxt` | `nuxt.config.ts` |
-| React (Vite / CRA) | `flusterduck` | `src/main.tsx` or `src/index.tsx` |
-| Generic / unknown | `flusterduck` | No injection |
+| Nuxt | `flusterduck` `@flusterduck/nuxt` | `plugins/flusterduck.client.ts` |
+| React / Vue (Vite / CRA) | `flusterduck` | `src/main.tsx` or `src/index.tsx` |
+| Plain HTML | nothing | `index.html` (or `public/index.html`) |
 
-If the CLI can't determine your framework, it installs the core SDK and exits with a code snippet to add manually.
+When the CLI can't place the code (no entry file it recognizes, or a layout with no `<body>`), it prints the script tag to paste and exits with code 1. It never claims success for a setup it didn't finish.
 
 ## What gets injected
 
-The injected code is a single import and a single init call. For Next.js App Router:
+For Next.js App Router, one import and one element inside `<body>`. The layout is edited in place: nothing else in the file is reformatted.
 
 ```tsx
 // app/layout.tsx
 import { FlusterduckScript } from '@flusterduck/next'
 
 // Added inside your RootLayout body:
-<FlusterduckScript apiKey="fd_pub_xxxxxxxxxxxx" />
+{process.env.NEXT_PUBLIC_FLUSTERDUCK_KEY ? <FlusterduckScript apiKey={process.env.NEXT_PUBLIC_FLUSTERDUCK_KEY} respectDoNotTrack={false} /> : null}
 ```
+
+The key goes into `.env.local` as `NEXT_PUBLIC_FLUSTERDUCK_KEY`. Set the same variable in your production environment (your Vercel project settings, for example), or production collects nothing.
 
 For vanilla React:
 
@@ -88,7 +90,13 @@ import { init } from 'flusterduck'
 init({ key: 'fd_pub_xxxxxxxxxxxx' })
 ```
 
-The key is written as a literal. That's fine: a publishable key is a public identifier, the same value that sits in a script tag on any site using the snippet install. It can only send events, never read data. If you'd rather load it from an environment variable, swap the literal for your framework's public env reference (`process.env.NEXT_PUBLIC_...`, `import.meta.env.VITE_...`) after the CLI runs.
+For plain HTML, the standard tag before `</head>`:
+
+```html
+<script src="https://flusterduck.com/d.js" data-key="fd_pub_xxxxxxxxxxxx" data-dnt="false" async></script>
+```
+
+A publishable key is a public identifier, the same value that sits in a script tag on any site using the snippet install. It can only send events, never read data.
 
 The CLI doesn't rewrite existing imports or touch your component tree. If Flusterduck is already present in the target file, it skips injection and tells you.
 
@@ -103,9 +111,11 @@ duck login    # browser sign-in (mints a key, nothing to copy) or paste with hid
 duck logout   # removes the saved key
 ```
 
-The browser option opens flusterduck.com, you pick the site this terminal should manage, and a freshly minted key is sent straight to the CLI on your machine (never through a URL). Either way `login` verifies the key against the API before saving, stores it in a `0600` file under your config directory (`~/.config/flusterduck/credentials.json`), and remembers the key's site, so a site-scoped key makes `--site` optional everywhere. Precedence when both exist: `--key` flag, then `FLUSTERDUCK_SECRET_KEY`, then the saved login. Override the API base with `--api` or `FLUSTERDUCK_API_URL`. Every command takes `--json` for raw output.
+The browser option opens flusterduck.com, you pick the site this terminal should manage, and a freshly minted key is sent straight to the CLI on your machine (never through a URL). Either way `login` verifies the key against the API before saving, stores it in a `0600` file under your config directory (`~/.config/flusterduck/credentials.json`), and remembers the key's site, so a site-scoped key makes `--site` optional everywhere. Precedence when both exist: `--key` flag, then the environment, then the saved login. Override the API base with `--api` or `FLUSTERDUCK_API_URL`. Every command takes `--json` for raw output.
 
-The CLI is built to be driven by agents as much as by people. `--json` returns the full API payload for every command, read commands also take `--md` for clean markdown, exit codes are honest (0 on success, 1 on any failure, with the error on stderr), and piped output drops colors and wrapping so plain-text parsing works too. The short version of the agent loop: `duck context` to get oriented, `duck fix --prompt` for a complete fix brief, `duck issue resolve <id> --note "..."` when done, `duck deploy watch` for the measured verdict.
+**One key for the CLI and the MCP server.** The CLI takes a secret key (`fd_sec_`) or an MCP key (`fd_mcp_`): an MCP key works for every read, and for writes when it has `manage:write`. It reads the key from `FLUSTERDUCK_SECRET_KEY`, `FLUSTERDUCK_MCP_KEY`, or `FLUSTERDUCK_API_KEY`, in that order, and the [local MCP server](./mcp) reads the same three names. Export one key once and both tools use it. A site-scoped key passed with `--key` or the environment needs no `--site`: the CLI asks the API which site the key belongs to.
+
+The CLI is built to be driven by agents as much as by people. `--json` returns the full API payload for every command, and errors come back as `{"error":{"message":"..."}}` on stdout when `--json` is set. Read commands also take `--md` for clean markdown, exit codes are honest (0 on success, 1 on any failure, with the error on stderr), a mistyped command says so and suggests the closest real one, and piped output drops colors, wrapping, and spinners so plain-text parsing works too. Nothing prompts without a terminal: `login` and `init` say which flag to pass instead. The short version of the agent loop: `duck context` to get oriented, `duck fix --prompt` for a complete fix brief, `duck issue resolve <id> --note "..."` when done, `duck deploy watch` for the measured verdict.
 
 ```bash
 duck login
@@ -228,10 +238,12 @@ flusterduck deploy watch --commit "$(git rev-parse HEAD)" --timeout 45
 
 ## Troubleshooting
 
-**"Could not automatically inject code"**: the CLI found the entry file but couldn't parse it (unusual syntax, non-standard structure). Wire the init call manually following the [quickstart](./quickstart).
+**"Automatic setup was not possible"**: the CLI couldn't find or parse an entry file. It prints the script tag; paste it into your page's `<head>` or wire the init call following the [quickstart](./quickstart).
 
-**"Flusterduck is already configured"**: the SDK was already detected in the target file. Nothing changed.
+**"Key rejected"**: Flusterduck doesn't recognize that publishable key. Nothing was changed. Copy the key again from Settings > API keys.
 
-**"Failed to install dependencies"**: package installation failed. The CLI prints the exact install command to run yourself.
+**"Flusterduck is already set up"**: the SDK was already detected in the target file. Nothing changed.
+
+**"Install failed"**: the code is in place but its packages aren't installed. The CLI prints the exact install command to run yourself and exits with code 1.
 
 If none of these come up, the install worked. That outcome is more common than a troubleshooting section makes it sound.

@@ -30,7 +30,7 @@ Add it to your assistant's MCP configuration. The server needs one value: an MCP
 
 | Variable | Required | Description |
 |---|---|---|
-| `FLUSTERDUCK_MCP_KEY` | yes | An `fd_mcp_` key from Settings > API Keys. `FLUSTERDUCK_API_KEY` is accepted as an alias and also takes `fd_sec_` keys. |
+| `FLUSTERDUCK_MCP_KEY` | for data tools | An `fd_mcp_` key from Settings > API Keys (an `fd_sec_` key works too). `FLUSTERDUCK_SECRET_KEY`, the name the CLI uses, and `FLUSTERDUCK_API_KEY` are accepted as aliases. Without a key the server still starts: docs tools work and data tools return the setup steps. |
 | `FLUSTERDUCK_SITE_ID` | no | A site UUID. Only needed for org-scoped keys, to pick which site to read; site-scoped keys already know their site. |
 | `FLUSTERDUCK_ORG_ID` | no | Pins org-level reads to a specific org. Normally unnecessary: the key's own org is used automatically. |
 | `FLUSTERDUCK_API_URL` | no | Override the API base URL. Defaults to the hosted Flusterduck API. |

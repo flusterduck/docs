@@ -135,13 +135,17 @@ Point your client at `https://mcp.flusterduck.com/mcp`. There is nothing to copy
 
 ## Keys
 
-The hosted server never needs a key; sign-in handles it. MCP keys (`fd_mcp_`, created under Settings > API Keys) are only for the local stdio server.
+The hosted server never needs a key; sign-in handles it. The local stdio server takes an MCP key (`fd_mcp_`, created under Settings > API Keys) or a secret key (`fd_sec_`), read from `FLUSTERDUCK_MCP_KEY`, `FLUSTERDUCK_SECRET_KEY`, or `FLUSTERDUCK_API_KEY`. The [CLI](./cli) reads the same names and accepts the same keys for reads, so one exported key serves both.
+
+If the key is missing or malformed, the local server still starts: the docs tools (`list_docs`, `search_docs`, `get_doc`) work, and every data tool answers with the setup steps instead of data. Your assistant can tell you exactly what's wrong instead of showing no Flusterduck tools at all.
+
+Both servers describe every tool the same way and send the same instructions on connect. Every site-level tool takes an optional `site_id`, and `list_sites` lists the sites the key can read, so one org-scoped key can work across sites. Outputs are compact JSON. `get_flows` returns the 25 busiest edges by default, and `download_events_csv` returns 100 rows per call with `truncated` and `next_offset` for paging. `query_raw_rows`, `download_events_csv`, and `get_session_detail` are marked as raw data: prefer the summary tools first.
 
 ## MCP or CLI?
 
 Both surfaces expose the same data; pick by where the agent runs. MCP is right for interactive assistants (Claude Desktop, Cursor, Claude Code sessions): persistent connection, tools, and the multi-step prompts below. The [CLI](./cli) is right for CI jobs and shell scripts: `npx flusterduck-cli issues --site <id> --json` for reads, `issue resolve|ignore|reopen|start` to manage issues, and `deploy notify` to record deploys. Every command takes `--json`, so agents can parse the output directly.
 
-**Read-only** (`mcp:read`): all query tools and prompts, including `whoami` (introspect the key's scope and permissions). Can't write anything. Start here.
+**Read-only** (`mcp:read`): all query tools and prompts, including `whoami` (introspect the key's scope and permissions) and `list_alert_rules`. Can't write anything. Start here.
 
 **Read + write** (`mcp:read` + `manage:write`): adds `update_issue`, `update_alert`, `add_annotation`, `create_alert_rule`, `update_alert_rule`, `delete_alert_rule`, and `send_feedback`. Needed for triage and annotation workflows.
 
@@ -211,6 +215,7 @@ All require `mcp:read` scope. Start with `get_site_context`. It gives you the fu
 **Start here**
 
 - `get_site_context`: Full snapshot of scores, open issues, active alerts, recent deploys, and top recommendations. The right first call for any investigation.
+- `list_sites`: The sites this key can read, with ids to pass as `site_id`. A site-scoped key returns its one site.
 - `get_scores`: Every tracked page ranked by current confusion score.
 - `get_recommendations`: Prioritized fix list ranked by estimated confusion reduction.
 
@@ -234,14 +239,14 @@ All require `mcp:read` scope. Start with `get_site_context`. It gives you the fu
 - `get_session_detail`: Full event timeline for one session in chronological order.
 - `get_heuristics`: The complete signal catalog: every friction heuristic type with its scoring weight and thresholds.
 - `query_raw_rows`: SQL-style access to allowlisted tables (`events`, `signals`, `sessions`, `page_scores`, `score_history`, `ux_issues`, `alerts`, `deploys`).
-- `download_events_csv`: Raw event export as CSV.
-- `explore`: A deterministic, typed query engine over session data. No natural language, no LLM, built explicitly for agents to answer ad-hoc questions the rest of the surface doesn't cover directly. Pick a `window_days` (1-90, default 7), up to 12 AND-ed `filters` over `signal`, `page`, `source`, `confused`, `converted`, `event_type` (ops `is` / `is_not` / `contains`, contains only on `page` and `source`), and exactly one `output`: `{mode: "list"}` to pull matching sessions, or `{mode: "measure", metric, group_by?}` to compute `count`, `avg_pageviews`, `conversion_rate`, `avg_dwell_ms`, or `bounce_rate` as a scalar or, with `group_by` (`page`, `source`, `day`, `signal`, `cohort`), a series. See "Explore via MCP" below for a list and a measure example.
+- `download_events_csv`: Raw event export as CSV, 100 rows per call by default (max 1000). A second block reports `rows`, `truncated`, and `next_offset`; pass `offset` to page.
+- `explore`: A deterministic, typed query engine over session data. No natural language, no LLM, built explicitly for agents to answer ad-hoc questions the rest of the surface doesn't cover directly. Pick a `window_days` (1-90, default 7), up to 12 AND-ed `filters` over `signal`, `page`, `source`, `confused`, `converted`, `event_type` (ops `is` / `is_not` / `contains`: `is` matches the exact value, so page `is` `/pricing` misses `/pricing/annual`; `contains` matches a substring and only applies to `page` and `source`), and exactly one `output`: `{mode: "list"}` to pull matching sessions, or `{mode: "measure", metric, group_by?}` to compute `count`, `avg_pageviews`, `conversion_rate`, `avg_dwell_ms`, or `bounce_rate` as a scalar or, with `group_by` (`page`, `source`, `day`, `signal`, `cohort`), a series. See "Explore via MCP" below for a list and a measure example.
 
 **Deploy correlation**
 
 - `get_deploys`: All deploys Flusterduck knows about, with `confusion_before` and `confusion_after` populated for deploys older than 5 minutes.
 - `get_revenue_impact`: Revenue impact estimates for active friction. Only populated when conversion tracking is wired.
-- `get_flows`: Page-to-page navigation edges from recent sessions.
+- `get_flows`: Page-to-page navigation edges from recent sessions, busiest first. 25 by default, up to 100.
 
 **Conversion impact**
 
