@@ -1,6 +1,6 @@
 # AI detection
 
-AI detection puts an AI analyst on your site. Each night it reads a compressed summary of the day's real sessions, then chooses what to investigate. It can pull the underlying sessions, page context, deploy timing, cursor movement, and any valid episode receipts before deciding whether the evidence supports an issue.
+AI detection puts an AI analyst on your site. Each night it reads a compressed summary of the day's real sessions, then chooses what to investigate. A new site gets its first review sooner, as soon as real visitors arrive. It can pull the underlying sessions, page context, deploy timing, cursor movement, and any valid episode receipts before deciding whether the evidence supports an issue.
 
 It is on by default for every site. Built-in pattern detection continues to power real-time signals, scores, and alerts. If the AI analyst cannot run, unreviewed fallback findings are held instead of being filed as customer issues. You can opt a site out any time under Settings, then AI.
 
@@ -41,6 +41,12 @@ Code-only filing is not active yet. Flusterduck records no-matches from selector
 ## The analyst remembers your site
 
 The analyst keeps a working model of each site: what the product is, its money paths, its weak points, and a ledger of hypotheses it is watching. A pattern too thin to file tonight accumulates evidence across nights and gets filed when it clears the bar. Issues it files again update in place rather than duplicating.
+
+## Your first review
+
+A new site doesn't wait for the night. Your first review runs once a couple of real visitors have used the site, usually within the first hours of traffic. Concretely, that's two different visitors and five visits where someone clicked, scrolled or used a form. Your own testing from one network counts as one visitor, and automated browsers don't count at all.
+
+The first review reads every visit since the install. If visitors keep coming, a second review runs about a day later and reads only what arrived after the first. From then on the site is on the nightly schedule. Both early reviews come out of the same AI allowance as every other run, and they don't start when the allowance couldn't cover one.
 
 ## Run history and running on demand
 
