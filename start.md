@@ -6,7 +6,7 @@ The SDK is installed and signals are flowing. Here's what to do with them.
 
 Open the dashboard. Every tracked page has a confusion score from 0 to 100. Higher is worse. A page at 15 is fine. A page at 60 has real friction. A page at 80 is actively costing you conversions.
 
-The score accounts for signal type, frequency, and recency. A single `rage_click` on your checkout button today matters more to the score than 10 `passive_drift` signals from last month.
+The score accounts for signal type, frequency, and recency. A single `rage_click` on your checkout button today matters more to the score than 10 `hover_dwell` signals from last month.
 
 New sites take 24-48 hours to produce meaningful scores. You need enough signal volume for the clustering to kick in.
 

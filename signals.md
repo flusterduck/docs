@@ -2,7 +2,7 @@
 
 Signals are the raw evidence of user confusion. Every time a user does something that indicates friction, the SDK emits a signal. The scoring engine weighs signals by type, frequency, and recency to compute page confusion scores and cluster repeated patterns into issues.
 
-There are 132 built-in signal types across four tiers, all detecting on a default install. Any signal can be switched off per site from the served SDK config.
+There are 120 built-in signal types across four tiers, all detecting on a default install. Any signal can be switched off per site from the served SDK config.
 
 ## Tier 1: Direct friction
 
@@ -14,10 +14,6 @@ If you see tier 1 signals on a critical element (a checkout button, a signup for
 |---|---|
 | `rage_click` | User clicked the same element 3 or more times rapidly. Usually means the element appears clickable but isn't responding as expected. |
 | `dead_click` | User clicked a non-interactive element and the page did nothing in response for over a second: no new content, no navigation, no focus change. Often a label, image, or decorative element the user thought was a button. Clicks your framework handles (React or Vue handlers on a plain `div`) don't count, because the page responds. |
-| `layout_shift_rage` | A rage click followed by a significant layout shift. The interface moved under the user's cursor. |
-| `active_funnel_rejection` | User initiated a multi-step flow and exited before the first meaningful step. Not a casual bounce: they started, then left. |
-| `dead_end_submit` | User submitted a form and received no visible feedback. No success state, no error message, nothing. |
-| `accidental_click_bounce` | User clicked an element and immediately hit the back button. Likely an accidental tap or misclick. |
 | `error_recovery_loop` | An unhandled JavaScript error, rejected promise, failed network request, or console-logged error occurred during the session. Console capture matters because most production errors never reach `window.onerror`: error boundaries and `.catch(console.error)` swallow them, and the console is where they land. Messages are scrubbed of tokens, secrets, and PII in the browser; identical messages emit once per session with a hard per-session cap. Together with interaction context this is the flight recorder: what the code was doing at the moment users struggled, attached to issues as evidence and fed to the AI diagnosis and Autofix briefs, with no session recording anywhere. The SDK ships this on the wire as `error_encounter`, an older name that still normalizes to this same signal (see Legacy aliases, further down this page); it isn't a second, separate detector. |
 | `silent_failure_retry` | User repeated an action that appeared to succeed but produced no visible result. Common with async operations that fail silently. |
 | `form_abandonment` | User focused one or more form fields and left without submitting. Threshold: at least one meaningful field interaction. |
@@ -40,13 +36,8 @@ If a tier 2 signal appears 20+ times on the same page, or you're seeing 5+ diffe
 | Signal | What it means |
 |---|---|
 | `u_turn_navigation` | User went forward in a flow, then immediately went back. Repeated occurrences suggest unclear copy or a missing expectation-setter. |
-| `information_maze` | User visited the same page or section multiple times without completing anything. They're looking for something they can't find. |
-| `load_abandonment` | User waited for a page to load and left before it finished. Indicates a performance problem on a high-friction path. |
-| `multi_step_reset` | User restarted a multi-step form or wizard from the beginning. Could be data entry confusion or unclear field validation. |
 | `query_thrashing` | User made multiple search or filter queries in rapid succession. They're not finding what they're looking for. |
 | `filter_spiral` | User applied and removed filters repeatedly without settling. Likely an expectation mismatch between filters and results. |
-| `post_action_anxiety` | User completed an action but immediately checked for confirmation or left the page. Suggests missing confirmation feedback. |
-| `settings_hop` | User visited settings or preferences multiple times in a session without finding what they needed. |
 | `copy_paste_rework` | A paste into a field was blocked, and the user retyped the same content by hand right afterward. The clipboard block cost them the shortcut they reached for. |
 | `repeat_form_input` | User cleared and re-entered the same field more than once. Usually a validation message that's unclear or delayed. |
 | `bulk_action_miss` | User committed the same value into 4 or more structurally identical sibling fields, one row at a time, within 3 minutes. A copy-to-all control went unnoticed, or doesn't exist. The value itself never leaves the browser: only counts and field identity are reported. |
@@ -83,7 +74,6 @@ A page with dense tier 3 signals and no tier 1 or 2 signals is usually one of tw
 | `thrash_cursor` | Rapid cursor movement across the page with no clear direction. A general confusion indicator. Dragging, sliders, range inputs, canvases, and maps are excluded, since back-and-forth motion is how you use them. |
 | `viewport_thrashing` | Three or more meaningful viewport resize events within 5 seconds. Usually a devtools panel toggling, a window being dragged between monitors, or a mobile browser's chrome showing and hiding, but a page that reflows badly during it will show up here. Pinch-to-zoom is its own signal: see `pinch_zoom` below. |
 | `visibility_thrashing` | User switched away from the tab and back again several times in a row while in the middle of a task: alt-tabbing to check email, a second monitor, another app, or another tab, then returning. Fires only when the round trips started mid-task, not on an idle tab. |
-| `passive_drift` | User stayed on a page longer than average but generated very few events. Could be reading carefully or completely lost. |
 | `help_hunt` | User clicked 3 or more help, FAQ, support, or tooltip elements within 60 seconds. They're actively hunting for an answer the page isn't giving them directly. |
 | `tooltip_dependency` | User hovered over the same tooltip trigger 3+ times within 5 minutes, spending 500ms+ on each hover. The label is unclear and they keep re-reading the explanation. |
 | `scroll_to_nowhere` | User scrolled to the bottom of the page and immediately scrolled back up within 3 seconds. They expected more content below, or couldn't find what they were looking for. |
@@ -124,8 +114,8 @@ Signals that correlate directly with lost conversions. These feed the revenue im
 | Signal | What it means |
 |---|---|
 | `close_click_reversal` | User moved toward closing, dismissing, or canceling something, then stopped and stayed. They were about to leave but didn't. Use this to find moments where users reconsider. |
-| `value_collapse_downgrade` | User selected a higher plan or tier, then downgraded before completing purchase. Usually indicates a pricing page clarity problem. |
-| `layout_exhaustion_settling` | User scrolled through the full page, returned to the top, and selected an option. They were overwhelmed and had to start over to decide. |
+
+Sessions that intended a higher plan and bought a lower one aren't a signal: they show up as opportunities in the [revenue impact](./revenue) estimate, built from your intent and purchase events.
 
 ## Interaction obstruction signals
 
@@ -296,7 +286,7 @@ signal('form_abandonment', {
 })
 ```
 
-The first argument is a signal type from the 132 built-in list above (or one of the legacy aliases below). The second is `{ element?, metadata?, weight? }`; anything you want attached has to go under `metadata`, not at the top level. See [SDK Reference](/sdk) for the full signature. Never include PII, form values, or anything a user typed.
+The first argument is a signal type from the 120 built-in list above (or one of the legacy aliases below). The second is `{ element?, metadata?, weight? }`; anything you want attached has to go under `metadata`, not at the top level. See [SDK Reference](/sdk) for the full signature. Never include PII, form values, or anything a user typed.
 
 A name outside that list is accepted by the browser and sent, but doesn't score: it isn't a recognized signal type, so it never gets weighted, never shows up in a page's signal breakdown, and never clusters into an issue on its own. If you need a fully custom pattern scored and clustered like a built-in signal, use a Custom Monitor (Settings) instead, which ships as `custom_monitor` and does go through the full pipeline. Reuse a built-in type that's close enough and add your own context in `metadata` when you can; it's the difference between a signal that shows up on your dashboard and one that doesn't.
 
@@ -345,4 +335,4 @@ These older signal names still work:
 
 Signals don't directly create issues. The scoring engine clusters signals by element, page, and user population. When a cluster crosses a confidence threshold, it becomes a UX issue. The confusion score for a page reflects the weighted sum of recent signals, normalized for session volume.
 
-Every signal carries a weight (the number in each definition, 6 to 40), and that weight, not its tier, is what moves your page score: a single `rage_click` (weight 25) moves it more than a single `passive_drift` (weight 8). Tier is a rough, human-facing grouping of how much confidence a lone occurrence deserves, useful for reading the table above, but the tier number itself isn't what the scoring engine sums. And weight isn't the whole story either: 200 `passive_drift` signals on the same element will create an issue regardless of its low weight. Frequency overrides weight at scale.
+Every signal carries a weight (the number in each definition, 6 to 30), and that weight, not its tier, is what moves your page score: a single `rage_click` (weight 25) moves it more than a single `hover_dwell` (weight 7). Tier is a rough, human-facing grouping of how much confidence a lone occurrence deserves, useful for reading the table above, but the tier number itself isn't what the scoring engine sums. And weight isn't the whole story either: 200 `hover_dwell` signals on the same element will create an issue regardless of its low weight. Frequency overrides weight at scale.

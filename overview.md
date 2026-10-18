@@ -12,7 +12,7 @@ There's a gap between "conversion dropped 8% on checkout" and "140 users dead-cl
 
 ## How it works
 
-The SDK runs in the browser. It listens for behavioral signals, 132 types in all (rage clicks, dead clicks, form abandonment, scroll patterns, keyboard confusion, mobile tap misses, navigation loops, and more), and sends them to the scoring engine. It never records keystrokes or form values. For an element involved in a signal, it may send a short, PII-redacted accessible label so the evidence is readable.
+The SDK runs in the browser. It listens for behavioral signals, 120 types in all (rage clicks, dead clicks, form abandonment, scroll patterns, keyboard confusion, mobile tap misses, navigation loops, and more), and sends them to the scoring engine. It never records keystrokes or form values. For an element involved in a signal, it may send a short, PII-redacted accessible label so the evidence is readable.
 
 Flusterduck does four things with those signals:
 
@@ -48,7 +48,7 @@ Paid product. No free tier. No open-source version.
 | Pro | $499 | Up to 1,000,000 | 10 | Unlimited | AI diagnosis, 30 autofixes a month |
 | Enterprise | Custom | Custom | Unlimited | Unlimited | AI diagnosis, unlimited autofixes |
 
-Every plan gets the full detection engine: all 132 friction signals, issues, alerts, integrations, and MCP access. The tiers differ on volume, sites, seats, and AI allowances, not on which detectors you're allowed to run.
+Every plan gets the full detection engine: all 120 friction signals, issues, alerts, integrations, and MCP access. The tiers differ on volume, sites, seats, and AI allowances, not on which detectors you're allowed to run.
 
 Session limits are pooled across all sites in the org, not per-site. Each organization gets one 3-day self-serve trial on Grow, Scale, or Pro. A card is required, you pay $0 today, and billing starts after 3 days unless you cancel. Enterprise terms are arranged separately.
 

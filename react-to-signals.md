@@ -55,7 +55,7 @@ Your listener receives an `EmittedSignal`:
 | --- | --- | --- |
 | `name` | `string` | The signal type, e.g. `rage_click`, `dead_click`, `form_hesitation`. |
 | `element` | `string` | CSS selector of the element involved (empty if not element-bound). |
-| `weight` | `number` | Severity contribution, 0 to 100, on detectors that set it. A growing set of newer detectors (payment, auth, checkout) do; most of the original detector set (rage click, dead click, and others) still reports `0` here even though they carry real weight server-side. Don't branch UI behavior on this field yet, it isn't consistent across all 132 signals. |
+| `weight` | `number` | Severity contribution, 0 to 100, on detectors that set it. A growing set of newer detectors (payment, auth, checkout) do; most of the original detector set (rage click, dead click, and others) still reports `0` here even though they carry real weight server-side. Don't branch UI behavior on this field yet, it isn't consistent across all 120 signals. |
 | `meta` | `object` | Empty for every built-in detector today, with one exception (`episode_evidence`). It's populated when you call `signal(name, { metadata })` yourself, echoing back whatever you passed. Built-in detector detail (counts, distances, timings) is sent to Flusterduck for scoring, but isn't currently surfaced through `onSignal`, only `element` and `name` are. |
 | `ts` | `number` | Timestamp in milliseconds. |
 

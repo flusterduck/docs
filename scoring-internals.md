@@ -36,74 +36,61 @@ Without a baseline, the raw score is clamped directly to 0-100.
 
 Every signal has a fixed weight that reflects how strong an indicator of friction it is. Higher weight means a single fire moves the score more. The engine uses these weights unless you've set custom weights via the SDK config.
 
-There are 132 built-in signal types across four tiers. What each signal detects and how it fires is documented on the [Signals](./signals) page; this page is the weight reference. A `signal()` call with a name outside this list is accepted by the browser but discarded at ingest, so it never receives a weight or affects a score; use a Custom Monitor (which ships as `custom_monitor`, weight 12) for patterns you define yourself.
+There are 120 built-in signal types across four tiers. What each signal detects and how it fires is documented on the [Signals](./signals) page; this page is the weight reference. A `signal()` call with a name outside this list is accepted by the browser but discarded at ingest, so it never receives a weight or affects a score; use a Custom Monitor (which ships as `custom_monitor`, weight 12) for patterns you define yourself.
 
-### Tier 1: direct friction (30 signals, weights 12-38)
+### Tier 1: direct friction (26 signals, weights 12-26)
 
 A single occurrence is meaningful. These move a page score the most.
 
 | Signal | Weight | Signal | Weight |
 |---|---|---|---|
-| `active_funnel_rejection` | 38 | `overlay_dismiss_struggle` | 22 |
-| `dead_end_submit` | 30 | `payment_method_thrash` | 22 |
-| `layout_shift_rage` | 28 | `form_abandonment` | 20 |
-| `error_recovery_abandon` | 26 | `disabled_element_attempt` | 20 |
-| `rage_click` | 25 | `focus_trap` | 20 |
-| `error_recovery_loop` | 24 | `form_validation_loop` | 20 |
-| `checkout_field_retreat` | 24 | `integration_retry_failure` | 20 |
-| `silent_logout_surprise` | 24 | `keyboard_trap` | 20 |
-| `setup_step_abandon` | 24 | `accidental_click_bounce` | 18 |
-| `cls_interaction_corruption` | 24 | `error_blindness` | 18 |
-| `silent_failure_retry` | 22 | `coupon_code_frustration` | 18 |
-| `invisible_required_field` | 22 | `ghost_toggle` | 18 |
-| | | `phantom_progress` | 18 |
-| | | `undo_panic` | 18 |
-| | | `responsive_layout_break` | 18 |
-| | | `dead_click_trap_zone` | 16 |
-| | | `no_op_interaction` | 15 |
-| | | `dead_click` | 12 |
+| `error_recovery_abandon` | 26 | `focus_trap` | 20 |
+| `rage_click` | 25 | `form_validation_loop` | 20 |
+| `error_recovery_loop` | 24 | `integration_retry_failure` | 20 |
+| `checkout_field_retreat` | 24 | `keyboard_trap` | 20 |
+| `silent_logout_surprise` | 24 | `error_blindness` | 18 |
+| `setup_step_abandon` | 24 | `coupon_code_frustration` | 18 |
+| `cls_interaction_corruption` | 24 | `ghost_toggle` | 18 |
+| `silent_failure_retry` | 22 | `phantom_progress` | 18 |
+| `overlay_dismiss_struggle` | 22 | `undo_panic` | 18 |
+| `invisible_required_field` | 22 | `responsive_layout_break` | 18 |
+| `payment_method_thrash` | 22 | `dead_click_trap_zone` | 16 |
+| `form_abandonment` | 20 | `no_op_interaction` | 15 |
+| `disabled_element_attempt` | 20 | `dead_click` | 12 |
 
-### Tier 2: navigation and flow friction (54 signals, weights 10-18)
+### Tier 2: navigation and flow friction (49 signals, weights 10-18)
 
 Each single occurrence is moderate-confidence. Clusters are high-confidence.
 
 | Signal | Weight | Signal | Weight |
 |---|---|---|---|
-| `u_turn_navigation` | 18 | `motion_sensitivity_trigger` | 14 |
-| `information_maze` | 18 | `bulk_action_miss` | 14 |
-| `multi_step_reset` | 18 | `post_action_anxiety` | 13 |
-| `reactivation_attempt` | 18 | `settings_hop` | 12 |
-| `load_abandonment` | 16 | `false_swipe` | 12 |
-| `fixed_control_collision` | 16 | `mobile_keyboard_dismiss` | 12 |
-| `autocomplete_fight` | 16 | `dark_pattern_detection` | 12 |
-| `input_format_roulette` | 16 | `plan_comparison_scroll` | 12 |
-| `trust_hesitation` | 16 | `decision_paralysis` | 12 |
-| `pricing_comparison_stall` | 16 | `faq_bounce` | 12 |
-| `downgrade_hesitation` | 16 | `font_swap_interaction` | 12 |
-| `permission_denial_break` | 16 | `loading_interaction` | 12 |
-| `premature_commit_reversal` | 16 | `long_task_interaction_block` | 12 |
-| `cancellation_flow_confusion` | 16 | `pagination_thrash` | 12 |
-| `search_zero_results` | 16 | `settings_churn` | 12 |
-| `scroll_hijack_rage` | 16 | `gesture_mismatch` | 12 |
-| `screen_reader_dead_end` | 16 | `tap_target_adjacency` | 12 |
-| `modal_stack` | 16 | `focus_order_confusion` | 12 |
-| `query_thrashing` | 15 | `contrast_interaction_failure` | 12 |
-| `filter_spiral` | 15 | `custom_monitor` | 12 |
-| `tab_thrash` | 15 | `keyboard_nav_frustration` | 10 |
-| `copy_paste_rework` | 14 | | |
-| `repeat_form_input` | 14 | | |
-| `sticky_obstruction_click` | 14 | | |
-| `paste_blocked` | 14 | | |
-| `clipboard_block` | 14 | | |
-| `validation_timing_mismatch` | 14 | | |
+| `u_turn_navigation` | 18 | `pricing_toggle_regret` | 14 |
+| `reactivation_attempt` | 18 | `viewport_dead_zone` | 14 |
+| `fixed_control_collision` | 16 | `first_value_delay` | 14 |
+| `autocomplete_fight` | 16 | `navigation_confusion` | 14 |
+| `input_format_roulette` | 16 | `feature_discovery_failure` | 14 |
+| `trust_hesitation` | 16 | `motion_sensitivity_trigger` | 14 |
+| `pricing_comparison_stall` | 16 | `bulk_action_miss` | 14 |
+| `downgrade_hesitation` | 16 | `false_swipe` | 12 |
+| `permission_denial_break` | 16 | `mobile_keyboard_dismiss` | 12 |
+| `premature_commit_reversal` | 16 | `dark_pattern_detection` | 12 |
+| `cancellation_flow_confusion` | 16 | `plan_comparison_scroll` | 12 |
+| `search_zero_results` | 16 | `decision_paralysis` | 12 |
+| `scroll_hijack_rage` | 16 | `faq_bounce` | 12 |
+| `screen_reader_dead_end` | 16 | `font_swap_interaction` | 12 |
+| `modal_stack` | 16 | `loading_interaction` | 12 |
+| `query_thrashing` | 15 | `long_task_interaction_block` | 12 |
+| `filter_spiral` | 15 | `pagination_thrash` | 12 |
+| `tab_thrash` | 15 | `settings_churn` | 12 |
+| `copy_paste_rework` | 14 | `gesture_mismatch` | 12 |
+| `repeat_form_input` | 14 | `tap_target_adjacency` | 12 |
+| `sticky_obstruction_click` | 14 | `focus_order_confusion` | 12 |
+| `paste_blocked` | 14 | `contrast_interaction_failure` | 12 |
+| `clipboard_block` | 14 | `custom_monitor` | 12 |
+| `validation_timing_mismatch` | 14 | `keyboard_nav_frustration` | 10 |
 | `billing_shipping_confusion` | 14 | | |
-| `pricing_toggle_regret` | 14 | | |
-| `viewport_dead_zone` | 14 | | |
-| `first_value_delay` | 14 | | |
-| `navigation_confusion` | 14 | | |
-| `feature_discovery_failure` | 14 | | |
 
-### Tier 3: passive and ambient confusion (45 signals, weights 6-26)
+### Tier 3: passive and ambient confusion (44 signals, weights 6-26)
 
 Lower individual weight, but meaningful in aggregate, plus the newer blank-page, reload, and auth/network dead-end detectors, which weight closer to tier 1 because a single fire is already high-confidence.
 
@@ -114,36 +101,33 @@ Lower individual weight, but meaningful in aggregate, plus the newer blank-page,
 | `oauth_dead_end` | 24 | `copy_frustration` | 10 |
 | `otp_entry_struggle` | 22 | `jargon_hover_loop` | 10 |
 | `deep_link_dead_end` | 22 | `tooltip_dependency` | 10 |
-| `offline_interaction_blackhole` | 20 | `swipe_miss` | 10 |
-| `captcha_challenge_rage` | 20 | `thumb_zone_miss` | 10 |
+| `offline_interaction_blackhole` | 20 | `thumb_zone_miss` | 10 |
+| `captcha_challenge_rage` | 20 | `swipe_miss` | 10 |
 | `auth_roundtrip_limbo` | 20 | `jerky_scrolling` | 9 |
 | `reload_retry` | 20 | `viewport_thrashing` | 9 |
 | `close_click_reversal` | 18 | `visibility_thrashing` | 9 |
-| `spa_back_button_dead` | 18 | `passive_drift` | 8 |
-| `thrash_cursor` | 15 | `input_correction` | 8 |
-| `help_hunt` | 14 | `image_decode_delay` | 8 |
-| `confidence_collapse` | 13 | `content_overload_scroll` | 8 |
-| `target_near_miss` | 12 | `reading_abandonment` | 8 |
-| `user_confusion_idle` | 12 | `text_select_frustration` | 8 |
-| `scroll_hijack` | 12 | `notification_fatigue` | 8 |
-| `thrash_hover` | 10 | `video_autoplay_escape` | 8 |
-| `text_selection_thrash` | 10 | `pinch_zoom` | 8 |
-| `third_party_script_block` | 10 | `orientation_thrash` | 8 |
-| `memory_pressure_jank` | 10 | `hover_dwell` | 7 |
-| `scroll_to_nowhere` | 10 | `scroll_depth_abandon` | 6 |
-| | | `slow_interaction` | 6 |
+| `spa_back_button_dead` | 18 | `input_correction` | 8 |
+| `thrash_cursor` | 15 | `image_decode_delay` | 8 |
+| `help_hunt` | 14 | `content_overload_scroll` | 8 |
+| `confidence_collapse` | 13 | `reading_abandonment` | 8 |
+| `target_near_miss` | 12 | `text_select_frustration` | 8 |
+| `user_confusion_idle` | 12 | `notification_fatigue` | 8 |
+| `scroll_hijack` | 12 | `video_autoplay_escape` | 8 |
+| `thrash_hover` | 10 | `pinch_zoom` | 8 |
+| `text_selection_thrash` | 10 | `orientation_thrash` | 8 |
+| `third_party_script_block` | 10 | `hover_dwell` | 7 |
+| `memory_pressure_jank` | 10 | `scroll_depth_abandon` | 6 |
+| `scroll_to_nowhere` | 10 | `slow_interaction` | 6 |
 
-### Revenue tier (3 signals, weights 30-40)
+### Revenue tier (1 signal, weight 30)
 
 Revenue signals carry the heaviest weights because they represent friction that directly costs money.
 
 | Signal | Weight | What it detects |
 |---|---|---|
-| `value_collapse_downgrade` | 40 | User intended a higher plan, hit friction, bought a lower one |
-| `layout_exhaustion_settling` | 34 | Long customizer effort ends in abandonment and a base-tier purchase |
 | `price_shock_abandon` | 30 | User dwells on a price or total, then leaves shortly after |
 
-A single `value_collapse_downgrade` fire contributes 40 points before normalization: more than any tier 1 signal.
+A single `price_shock_abandon` fire contributes 30 points before normalization: more than any tier 1 signal. Sessions that intended a higher plan and bought a lower one show up in the [revenue impact](./revenue) estimate instead, not as signals.
 
 ### Custom weights
 
@@ -153,7 +137,7 @@ You can override any signal weight through the SDK config. The engine merges you
 const weights = { ...SIGNAL_WEIGHTS, ...customWeights };
 ```
 
-If you set `rage_click` to 50, it'll carry double the default influence. If you set `passive_drift` to 0, it won't contribute at all.
+If you set `rage_click` to 50, it'll carry double the default influence. If you set `scroll_depth_abandon` to 0, it won't contribute at all.
 
 Unknown signal types that somehow reach the engine (shouldn't happen, but the code is defensive) get a fallback weight of 10.
 

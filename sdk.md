@@ -30,7 +30,7 @@ Always use `async`, never `defer`. It's the only way a slow or unreachable CDN c
 
 ## What you get automatically
 
-Once `init()` runs, the SDK starts detecting all 132 behavioral signal types without any additional code. You don't call `signal()` for rage clicks, dead clicks, form abandonment, scroll confusion, or mobile tap misses. Those just work.
+Once `init()` runs, the SDK starts detecting all 120 behavioral signal types without any additional code. You don't call `signal()` for rage clicks, dead clicks, form abandonment, scroll confusion, or mobile tap misses. Those just work.
 
 Signal classification runs locally in the browser. The SDK sends classified signals and safe metadata to the ingest API; scoring, alerting, and issue correlation happen after ingest.
 
@@ -117,7 +117,7 @@ signal('form_abandonment', {
 
 Never put PII, form values, or anything user-typed into metadata. Safe fields: element selectors, labels, page section names, plan IDs, product IDs.
 
-`type` should be one of the 132 built-in signal types listed in [Signals](/signals). A name outside that list is accepted and transmitted, but it won't be weighted, scored, or clustered into an issue, there's no free-form custom signal type today. For a pattern that isn't one of the 132, a Custom Monitor is the supported path.
+`type` should be one of the 120 built-in signal types listed in [Signals](/signals). A name outside that list is accepted and transmitted, but it won't be weighted, scored, or clustered into an issue, there's no free-form custom signal type today. For a pattern that isn't one of the 120, a Custom Monitor is the supported path.
 
 ## track()
 
@@ -214,7 +214,7 @@ You clicking around your own site isn't friction your users hit, so it shouldn't
 
 ## TypeScript
 
-The package ships full type definitions. There's an exported `SignalType` union for compile-time checking, but it's a legacy subset, not the full 132: it covers the core detectors from earlier releases and won't autocomplete names added since (payment, auth, and pricing signals among them). For the current, complete list, check [Signals](/signals) rather than relying on the type.
+The package ships full type definitions. There's an exported `SignalType` union for compile-time checking, but it's a legacy subset, not the full 120: it covers the core detectors from earlier releases and won't autocomplete names added since (payment, auth, and pricing signals among them). For the current, complete list, check [Signals](/signals) rather than relying on the type.
 
 ```ts
 import { signal } from 'flusterduck'
