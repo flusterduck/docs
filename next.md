@@ -66,7 +66,7 @@ Renders a `next/script` tag with `strategy="afterInteractive"`. Doesn't block re
 | `environment` | `string` | - | `"production"`, `"staging"`, `"development"` |
 | `sampleRate` | `number` | `1.0` | `0.5` tracks half of sessions. |
 | `cookieless` | `boolean` | `false` | Use memory-only session IDs instead of cookies. |
-| `respectDoNotTrack` | `boolean` | `true` | Honor `navigator.doNotTrack`. Most teams pass `false`: Flusterduck captures no PII, and the default silently drops 30-50% of visitors on Firefox, Brave, and other privacy-focused browsers. |
+| `respectDoNotTrack` | `boolean` | `true` | Honor `navigator.doNotTrack`. Most teams pass `false`: Flusterduck captures no PII, and the default skips every visitor whose browser or privacy extension sends Do Not Track or Global Privacy Control. |
 | `domMode` | `'metadata' \| 'snapshot'` | `'off'` | `'metadata'` captures element attributes with each signal. `'snapshot'` adds computed layout and styles. |
 | `compression` | `'auto' \| 'off'` | `'auto'` | Pass `'off'` to disable gzip batching. `'auto'` is the default either way, so it's only worth setting when you want `'off'`. |
 | `endpoint` | `string` | - | Self-hosted ingest endpoint, for teams proxying or self-hosting collection. |
@@ -104,7 +104,7 @@ Everything from the core `Config` type plus `enabled`:
 | `sampleRate` | `number` | `1.0` | Fraction of sessions to track. |
 | `domMode` | `'off' \| 'metadata' \| 'snapshot'` | `'off'` | `'metadata'` captures element attributes. `'snapshot'` adds layout and computed styles. |
 | `cookieless` | `boolean` | `false` | Memory-only session IDs instead of cookies. |
-| `respectDoNotTrack` | `boolean` | `true` | Honor `navigator.doNotTrack`. Most teams pass `false`: Flusterduck captures no PII, and the default silently drops 30-50% of visitors on Firefox, Brave, and other privacy-focused browsers. |
+| `respectDoNotTrack` | `boolean` | `true` | Honor `navigator.doNotTrack`. Most teams pass `false`: Flusterduck captures no PII, and the default skips every visitor whose browser or privacy extension sends Do Not Track or Global Privacy Control. |
 | `ignoreElements` | `string[]` | `[]` | CSS selectors to suppress signals on. Useful for admin overlays or debug panels. |
 | `ignorePages` | `string[]` | `[]` | Page paths to skip. Exact path match. A trailing `*` matches a prefix, a leading `*` matches a suffix. |
 | `segment` | `Record<string, string>` | - | Static tags on every event. |

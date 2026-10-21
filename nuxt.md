@@ -67,7 +67,7 @@ Anything from the core SDK `Config` type works here since `createFlusterduckPlug
 | `sampleRate` | `number` | `1.0` | `0.1` tracks 10% of sessions. |
 | `domMode` | `'off' \| 'metadata' \| 'snapshot'` | `'off'` | `'metadata'` captures element attributes with each signal. `'snapshot'` adds computed layout and styles. |
 | `cookieless` | `boolean` | `false` | Memory-only session IDs instead of cookies. |
-| `respectDoNotTrack` | `boolean` | `true` | Honor `navigator.doNotTrack`. Most teams pass `false`: Flusterduck captures no PII, and the default silently drops 30-50% of visitors on Firefox, Brave, and other privacy-focused browsers. |
+| `respectDoNotTrack` | `boolean` | `true` | Honor `navigator.doNotTrack`. Most teams pass `false`: Flusterduck captures no PII, and the default skips every visitor whose browser or privacy extension sends Do Not Track or Global Privacy Control. |
 | `ignoreElements` | `string[]` | `[]` | CSS selectors to suppress signals on. |
 | `ignorePages` | `string[]` | `[]` | Page paths to skip. |
 | `segment` | `Record<string, string>` | - | Static tags on every event. |

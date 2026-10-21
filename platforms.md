@@ -8,7 +8,7 @@ Every section below uses the same tag. Replace the key with your site's publisha
 <script src="https://flusterduck.com/d.js" data-key="fd_pub_xxxxxxxxxxxx" data-dnt="false" async></script>
 ```
 
-Keep `async` and `data-dnt="false"` exactly as shown. Without `data-dnt="false"` the SDK drops every visitor whose browser sends Do Not Track, which is 30-50% of traffic on Firefox and Brave.
+Keep `async` and `data-dnt="false"` exactly as shown. Without `data-dnt="false"` the SDK skips every visitor whose browser or privacy extension sends Do Not Track or Global Privacy Control.
 
 ## Shopify
 

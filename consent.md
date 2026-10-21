@@ -126,7 +126,7 @@ init({
 })
 ```
 
-Most legal frameworks don't require honoring DNT or GPC, and Flusterduck never captures PII, form values, or typed text, so for a lot of teams the signal is more caution than the product needs. Brave ships Global Privacy Control on for every visitor, Firefox and several privacy extensions let people turn on Do Not Track with one setting, and in practice that adds up: honoring the signal silently drops 30-50% of visitors from your data. Other teams leave it on because DNT is exactly what the visitor asked for. Decide based on your own privacy policy, not ours.
+Most legal frameworks don't require honoring DNT or GPC, and Flusterduck never captures PII, form values, or typed text, so for a lot of teams the signal is more caution than the product needs. Brave ships Global Privacy Control on for every visitor, Firefox and several privacy extensions let people turn on Do Not Track with one setting, and honoring the signal leaves every one of those visitors out of your data. Other teams leave it on because DNT is exactly what the visitor asked for. Decide based on your own privacy policy, not ours.
 
 ## optOut()
 

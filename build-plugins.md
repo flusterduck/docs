@@ -61,7 +61,7 @@ Both plugins take the same shape.
 | `debug` | `boolean` | `false` | Verbose console logging from the SDK. Maps to `data-debug`. |
 | `cookieless` | `boolean` | `false` | Memory-only session IDs instead of cookies. Maps to `data-cookieless`. |
 | `sampleRate` | `number` | - | Fraction of sessions to track (0 to 1). Maps to `data-sample`. |
-| `dnt` | `boolean` | `false` | Respect the browser's Do Not Track signal. Defaults to `false` (DNT is ignored) because Flusterduck captures no PII and respecting DNT by default silently drops 30-50% of visitors on privacy-focused browsers. Pass `dnt: true` to opt back into honoring it. Maps to `data-dnt`. |
+| `dnt` | `boolean` | `false` | Respect the browser's Do Not Track signal. Defaults to `false` (DNT is ignored) because Flusterduck captures no PII and respecting it by default skips every visitor whose browser or privacy extension sends Do Not Track or Global Privacy Control. Pass `dnt: true` to opt back into honoring it. Maps to `data-dnt`. |
 | `scriptSrc` | `string` | jsdelivr-hosted bundle | Override the script source URL. Use this if you're self-hosting the SDK bundle behind your own CDN or under a strict CSP. |
 | `enabled` | `boolean` | `true` | Set to `false` to skip injection entirely, for example in a local dev build where you don't want tracking. |
 

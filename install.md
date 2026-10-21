@@ -8,7 +8,7 @@ The fastest way to install: paste one tag before the closing `</body>`, no build
 <script src="https://flusterduck.com/d.js" data-key="fd_pub_xxxxxxxxxxxx" data-dnt="false" async></script>
 ```
 
-Replace `fd_pub_xxxxxxxxxxxx` with your site's publishable key. Onboarding shows it once, when you add the site. Lost it? Settings > Sites > New key mints a fresh one (the old one stops working). Keep `data-dnt="false"`: the SDK does not capture form values or user-typed text, and short element labels are PII-redacted before they leave the browser. The default Do Not Track behavior silently drops 30-50% of visitors (Firefox, Brave, privacy extensions) without changing those collection boundaries.
+Replace `fd_pub_xxxxxxxxxxxx` with your site's publishable key. Onboarding shows it once, when you add the site. Lost it? Settings > Sites > New key mints a fresh one (the old one stops working). Keep `data-dnt="false"`: the SDK does not capture form values or user-typed text, and short element labels are PII-redacted before they leave the browser. Without it, the SDK skips every visitor whose browser or privacy extension sends Do Not Track or Global Privacy Control, and those boundaries stay the same either way.
 
 The bootstrap reads its config from `document.currentScript`, and falls back to `document.querySelector('script[data-key^="fd_pub_"]')` if that's unset, so injecting the tag dynamically (`document.createElement('script')`, tag managers, etc.) works too, as long as `async` and `data-key` are set.
 

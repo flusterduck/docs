@@ -329,7 +329,7 @@ Or skip the build step with the script tag:
 <script src="https://flusterduck.com/d.js" data-key="fd_pub_xxxxxxxxxxxx" data-dnt="false" async></script>
 ```
 
-No `Flusterduck.init(...)` call needed. The bootstrap reads its config straight off the tag's `data-*` attributes. Keep `data-dnt="false"`: the SDK captures no PII, and the default Do Not Track behavior silently drops 30-50% of visitors on Firefox, Brave, and other privacy-focused browsers. Full script-tag reference: [Installation](./install).
+No `Flusterduck.init(...)` call needed. The bootstrap reads its config straight off the tag's `data-*` attributes. Keep `data-dnt="false"`: the SDK captures no PII, and without it the SDK skips every visitor whose browser or privacy extension sends Do Not Track or Global Privacy Control. Full script-tag reference: [Installation](./install).
 
 The SDK has no opinion about your framework. It only has opinions about your buttons.
 
