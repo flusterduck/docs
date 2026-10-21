@@ -115,7 +115,7 @@ Payloads are scrubbed at ingest as a backstop: keys that look like credentials o
 
 - API keys support IP allowlists with CIDR notation; requests from outside the allowlist get a 403.
 - Customer webhook URLs are validated against internal, private, and metadata address ranges before any delivery, redirects are refused outright, and the same checks re-run at delivery time, so a webhook endpoint can never be used to probe internal networks.
-- The site scanner's fetches run through the same public-address validation. AI-diagnosis page fetches are made by our rendering provider against the site's own registered public URL, never an address derived from visitor input.
+- The public teardown's fetches and browser visits run through the same public-address validation, and its browser can't send anything but GET requests. AI-diagnosis page fetches are made by our rendering provider against the site's own registered public URL, never an address derived from visitor input.
 - Unauthenticated browser navigations redirect to login; unauthenticated API fetches receive a 401. The middleware distinguishes the two by fetch metadata, so APIs never leak redirect chains.
 
 ## Reporting a vulnerability
