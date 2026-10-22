@@ -48,7 +48,7 @@ The analyst keeps a working model of each site: what the product is, its money p
 
 A new site doesn't wait for the night. Your first review runs once a couple of real visitors have used the site, usually within the first hours of traffic. Concretely, that's two different visitors and five visits where someone clicked, scrolled or used a form. Your own testing from one network counts as one visitor, and automated browsers don't count at all.
 
-The first review reads every visit since the install. If visitors keep coming, a second review runs about a day later and reads only what arrived after the first. From then on the site is on the nightly schedule. Both early reviews come out of the same AI allowance as every other run, and they don't start when the allowance couldn't cover one.
+The first review reads every visit since the install. If visitors keep coming, a second review runs about a day later and reads only what arrived after the first. From then on the site is on the nightly schedule. A night with no friction in it is skipped, and a quiet site with only a handful of rough visits waits up to three days so the next review reads them together. When a month is using its allowance faster than the calendar, a night can wait the same way, so the allowance lasts to the end of the month. Nothing gets dropped: a review always starts where the last one ended. Both early reviews come out of the same AI allowance as every other run, and they don't start when the allowance couldn't cover one.
 
 ## Run history and running on demand
 
