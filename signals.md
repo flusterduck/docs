@@ -147,7 +147,7 @@ Signals tied to page speed and responsiveness. These correlate with user frustra
 
 | Signal | What it means |
 |---|---|
-| `long_task_interaction_block` | User clicked, tapped, or pressed a key during or immediately after a long task (50ms+ main thread block). The browser's event loop was frozen and their input was delayed. Payload includes the task duration and estimated delay. |
+| `long_task_interaction_block` | User clicked, tapped, or pressed a key while a long task (50ms+ main thread block) was already running, and the input waited 100ms or more before the page could handle it. Payload includes the task duration and the measured input delay. Chromium browsers only: Safari and Firefox don't report long tasks. |
 | `slow_interaction` | An interaction took more than 200ms to produce its next paint. Lower-severity sibling of `long_task_interaction_block`: the browser wasn't fully frozen, but the response still lagged past what feels instant. |
 | `loading_interaction` | User clicked an element that was in a loading state (marked with `aria-busy`, disabled, or a spinner CSS class) and clicked it again before the loading finished. They're waiting and losing patience. |
 | `lcp` | Largest Contentful Paint measurement for the page. Rated good (under 2500ms), needs improvement (2500-4000ms), or poor (over 4000ms). |
