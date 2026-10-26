@@ -1,6 +1,6 @@
 # Site builders and tag managers
 
-If you can add a script tag to every page, Flusterduck works. That covers Shopify, Webflow, Wix, WordPress, Squarespace and Google Tag Manager. None of them needs a build step or a plugin from us.
+If you can add a script tag to every page, Flusterduck works. That covers Shopify, Webflow, Framer, Wix, WordPress, Squarespace and Google Tag Manager. None of them needs a build step or a plugin from us.
 
 Every section below uses the same tag. Replace the key with your site's publishable key (onboarding shows it, and Settings > Sites mints a new one if you lost it):
 
@@ -25,6 +25,14 @@ This covers your storefront: home, collections, product pages and the cart. Shop
 3. Publish the site. Custom code only goes live on publish, and it doesn't run in the Designer preview.
 
 Webflow only allows site-wide custom code on a paid site plan.
+
+## Framer
+
+1. Site Settings > General > Custom Code.
+2. Paste the tag into **End of `<body>` tag** and save.
+3. Publish. Custom code doesn't run in the editor preview, only on the published site.
+
+Framer moves between pages without a full reload. The SDK follows those route changes on its own, so every page is tracked from the one tag. If the Custom Code section is locked, your plan doesn't include it.
 
 ## Wix
 
